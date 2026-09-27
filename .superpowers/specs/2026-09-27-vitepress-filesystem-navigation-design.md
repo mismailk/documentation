@@ -85,12 +85,12 @@ Humanization rule: strip the `.md` extension, split on `[-_\s]`, lowercase words
 
 ### 5.3 Ordering (deterministic comparator, applied per sibling set)
 
-1. Items with explicit integer `order` sort first, ascending; ties fall through to rules 2–4.
+1. Items with explicit integer `order` sort first, ascending; ties between two ordered items fall through to rules 3–4.
 2. Items without `order` come after all ordered items.
 3. Directories sort before loose Markdown files.
 4. Alphabetical by route/link (stable, reflects filesystem names).
 
-A directory's `order` is read from its `index.md` frontmatter. Directory ordering uses the directory name for rule 4 when directories have no link (see 5.4).
+A directory's `order` is read from its `index.md` frontmatter. For groups without a link (no `index.md`), the directory name is the sort key for rule 4.
 
 ### 5.4 Routes (sidebar `link` values)
 
@@ -158,18 +158,18 @@ A directory's `order` is read from its `index.md` frontmatter. Directory orderin
 - Steps (official GitHub Pages flow):
 
 ```yaml
-- uses: actions/checkout@v4
-- uses: actions/setup-node@v4
+- uses: actions/checkout@v7
+- uses: actions/setup-node@v7
   with: { node-version: 20, cache: npm }
 - run: npm ci
 - run: npm run docs:build
   env:
     VITEPRESS_BASE: /${{ github.event.repository.name }}/
-- uses: actions/configure-pages@v5
-- uses: actions/upload-pages-artifact@v4
+- uses: actions/configure-pages@v6
+- uses: actions/upload-pages-artifact@v5
   with: { path: docs/.vitepress/dist }
 # deploy job:
-- uses: actions/deploy-pages@v4
+- uses: actions/deploy-pages@v5
 ```
 
 - Deployment environment: `github-pages` with `url` from the deploy step output.
