@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
-import { humanize, parseMeta, readMeta, routeFor } from '../scripts/generate-sidebar.mjs'
+import { humanize, parseMeta, readMeta, routeFor, compareEntries } from '../scripts/generate-sidebar.mjs'
 
 test('humanize produces readable titles', () => {
   assert.equal(humanize('installation.md'), 'Installation')
@@ -34,4 +34,22 @@ test('routeFor maps markdown paths to extensionless routes', () => {
   assert.equal(routeFor('api/users.md'), '/api/users')
   assert.equal(routeFor('getting-started/index.md'), '/getting-started/')
   assert.equal(routeFor('index.md'), '/')
+})
+
+const e = (order, isDir, sortName) => ({ order, isDir, sortName })
+
+test('compareEntries: ordered entries sort first, ascending', () => {
+  assert.equal(compareEntries(e(2, false, 'b'), e(1, true, 'a')), 1)
+  assert.equal(compareEntries(e(1, true, 'a'), e(undefined, false, 'z')), -1)
+  assert.equal(compareEntries(e(undefined, true, 'a'), e(1, false, 'z')), 1)
+})
+
+test('compareEntries: dirs before files, then alphabetical', () => {
+  assert.equal(compareEntries(e(undefined, true, 'docs'), e(undefined, false, 'api')), -1)
+  assert.equal(compareEntries(e(undefined, false, 'api'), e(undefined, false, 'users')), -1)
+})
+
+test('compareEntries: equal explicit orders fall through to dir/file then name', () => {
+  assert.equal(compareEntries(e(1, true, 'z'), e(1, false, 'a')), -1)
+  assert.equal(compareEntries(e(5, false, 'b'), e(5, false, 'a')), 1)
 })

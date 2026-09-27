@@ -38,3 +38,19 @@ export function routeFor(relPath) {
   const isIndex = clean === 'index' || clean.endsWith('/index')
   return isIndex ? `/${clean.replace(/index$/, '')}` : `/${clean}`
 }
+
+// Comparator for sidebar entries. Ordering rules (spec §5.3):
+//   1. explicit integer order ascending (ties fall through to 3-4)
+//   2. unordered entries after all ordered ones
+//   3. directories before loose markdown files
+//   4. alphabetical by route/link (or directory name when no link)
+export function compareEntries(a, b) {
+  const aHas = a.order !== undefined
+  const bHas = b.order !== undefined
+  if (aHas && bHas && a.order !== b.order) return a.order - b.order
+  if (aHas !== bHas) return aHas ? -1 : 1
+  if (a.isDir !== b.isDir) return a.isDir ? -1 : 1
+  if (a.sortName < b.sortName) return -1
+  if (a.sortName > b.sortName) return 1
+  return 0
+}
