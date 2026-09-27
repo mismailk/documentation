@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
-import { humanize, parseMeta, readMeta, routeFor, compareEntries, buildSidebar } from '../scripts/generate-sidebar.mjs'
+import { humanize, parseMeta, readMeta, routeFor, compareEntries, buildSidebar, renderArtifact } from '../scripts/generate-sidebar.mjs'
 
 test('humanize produces readable titles', () => {
   assert.equal(humanize('installation.md'), 'Installation')
@@ -105,4 +105,9 @@ test('buildSidebar derives groups and items from the filesystem', () => {
     { text: 'Only Index', link: '/only-index/', items: [] },
   ])
   fs.rmSync(root, { recursive: true, force: true })
+})
+
+test('renderArtifact round-trips to JSON', () => {
+  const sidebar = [{ text: 'G', link: '/g/', items: [] }]
+  assert.deepEqual(JSON.parse(renderArtifact(sidebar)), sidebar)
 })

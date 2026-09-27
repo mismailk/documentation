@@ -1,5 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import matter from 'gray-matter'
 
 // Convert a file name or directory name into a readable title.
@@ -119,4 +120,31 @@ function buildDir(dirPath, relDir, isRoot) {
     }
     return { text: node.meta.title ?? humanize(node.name), link: routeFor(node.rel) }
   })
+}
+
+// Serialize a sidebar for the generated artifact file.
+export function renderArtifact(sidebar) {
+  return `${JSON.stringify(sidebar, null, 2)}\n`
+}
+
+// Write a sidebar to an artifact file, creating parent directories.
+export function writeArtifact(sidebar, outFile) {
+  fs.mkdirSync(path.dirname(outFile), { recursive: true })
+  fs.writeFileSync(outFile, renderArtifact(sidebar))
+}
+
+// CLI entry: scan the repo's docs/ directory and write the sidebar artifact.
+// Run as `node scripts/generate-sidebar.mjs` (or via `npm run generate`).
+export function main() {
+  const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
+  const docsDir = path.join(repoRoot, 'docs')
+  const outFile = path.join(repoRoot, 'docs', '.vitepress', 'sidebar.gen.json')
+  const sidebar = buildSidebar(docsDir)
+  writeArtifact(sidebar, outFile)
+  console.log(`Generated ${outFile} (${sidebar.length} top-level items)`)
+}
+
+// Only run when invoked directly; importing this module must not scan.
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main()
 }
