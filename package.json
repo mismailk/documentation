@@ -1,0 +1,18 @@
+{
+  "name": "vitepress-project",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "dev": "vitepress dev docs",
+    "build": "vitepress build docs",
+    "serve": "vitepress serve docs"
+  },
+  "devDependencies": {
+    "vue": "^3.5.13",
+    "vitepress": "^1.6.4",
+    "gray-matter": "^4.0.3"
+  }
+}
