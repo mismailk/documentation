@@ -1,4 +1,5 @@
 import fs from 'node:fs'
+import path from 'node:path'
 import matter from 'gray-matter'
 
 // Convert a file name or directory name into a readable title.
@@ -53,4 +54,69 @@ export function compareEntries(a, b) {
   if (a.sortName < b.sortName) return -1
   if (a.sortName > b.sortName) return 1
   return 0
+}
+
+// Recursively build the sidebar array for a docs directory.
+// Directories become groups (with an optional clickable link when they
+// contain an index.md); loose .md files become items. The root index.md,
+// hidden entries, and non-markdown files are excluded.
+export function buildSidebar(docsDir) {
+  return buildDir(docsDir, '', true)
+}
+
+function buildDir(dirPath, relDir, isRoot) {
+  const entries = fs.readdirSync(dirPath, { withFileTypes: true })
+  const collected = []
+  for (const entry of entries) {
+    const name = entry.name
+    if (name.startsWith('.')) continue
+    const rel = relDir ? `${relDir}/${name}` : name
+    if (entry.isDirectory()) {
+      const indexPath = path.join(dirPath, name, 'index.md')
+      const hasIndex = fs.existsSync(indexPath)
+      collected.push({
+        kind: 'dir',
+        name,
+        rel,
+        indexMeta: hasIndex ? readMeta(indexPath) : undefined,
+      })
+    } else if (name.endsWith('.md') && name !== 'index.md') {
+      // index.md at any depth is the parent directory's landing page —
+      // consumed above as directory metadata, never emitted as its own item.
+      collected.push({
+        kind: 'file',
+        name,
+        rel,
+        meta: readMeta(path.join(dirPath, name)),
+      })
+    }
+  }
+
+  // Ruling (see ledger): directories sort by their bare name, not their
+  // route — routeFor('only-index/index.md') yields '/only-index/', whose
+  // leading '/' sorts before letter-leading names and breaks the pinned
+  // expected order ('Only Index' must sort after 'Guides').
+  const sortable = collected.map((node) => {
+    if (node.kind === 'dir') {
+      return { node, isDir: true, order: node.indexMeta?.order, sortName: node.name }
+    }
+    return { node, isDir: false, order: node.meta.order, sortName: routeFor(node.rel) }
+  })
+
+  // Determinism: byte-wise name sort first (fs readdir order is not
+  // guaranteed), then a stable sort by the spec comparator.
+  sortable.sort((a, b) => (a.node.name < b.node.name ? -1 : a.node.name > b.node.name ? 1 : 0))
+  sortable.sort(compareEntries)
+
+  return sortable.map(({ node }) => {
+    if (node.kind === 'dir') {
+      const group = {
+        text: node.indexMeta?.title ?? humanize(node.name),
+        items: buildDir(path.join(dirPath, node.name), node.rel, false),
+      }
+      if (node.indexMeta) group.link = routeFor(`${node.rel}/index.md`)
+      return group
+    }
+    return { text: node.meta.title ?? humanize(node.name), link: routeFor(node.rel) }
+  })
 }
