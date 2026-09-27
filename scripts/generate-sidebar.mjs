@@ -19,12 +19,18 @@ export function humanize(name) {
 }
 
 // Parse just the `title` and `order` fields from a document's frontmatter.
-// Always returns both keys; values may be undefined when absent.
+// Always returns both keys; values may be undefined when absent. Malformed
+// YAML (a doc authoring typo) must not crash the generator — it degrades to
+// the fallback values instead.
 export function parseMeta(content) {
-  const { data } = matter(content)
-  return {
-    title: data.title,
-    order: Number.isInteger(data.order) ? data.order : undefined,
+  try {
+    const { data } = matter(content)
+    return {
+      title: data.title,
+      order: Number.isInteger(data.order) ? data.order : undefined,
+    }
+  } catch {
+    return { title: undefined, order: undefined }
   }
 }
 

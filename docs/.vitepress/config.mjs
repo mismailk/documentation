@@ -5,15 +5,21 @@ import { fileURLToPath } from 'node:url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
-function normalizeBase(base) {
+// Normalize a site base path: start and end with a slash, unless it is the
+// relocatable './'. Exported for testing.
+export function normalizeBase(base) {
   if (base === './') return base
   if (!base.startsWith('/')) base = `/${base}`
   if (!base.endsWith('/')) base += '/'
   return base
 }
 
-function loadSidebar() {
-  const file = path.join(__dirname, 'sidebar.gen.json')
+// Read the generated sidebar artifact as JSON. Falls back to an empty
+// sidebar with a warning when the artifact is missing or unreadable, so a
+// direct `vitepress build docs` (without `npm run generate`) still builds.
+// `dir` defaults to this config file's directory; exported for testing.
+export function loadSidebar(dir = __dirname) {
+  const file = path.join(dir, 'sidebar.gen.json')
   try {
     return JSON.parse(fs.readFileSync(file, 'utf8'))
   } catch {

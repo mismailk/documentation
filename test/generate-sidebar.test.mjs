@@ -21,6 +21,10 @@ test('parseMeta extracts title and integer order only', () => {
   assert.deepEqual(parseMeta('---\ntitle: X\norder: "two"\n---\n'), { title: 'X', order: undefined })
 })
 
+test('parseMeta degrades malformed YAML frontmatter instead of throwing', () => {
+  assert.deepEqual(parseMeta('---\ntitle: "unclosed\n---\n# x'), { title: undefined, order: undefined })
+})
+
 test('readMeta reads frontmatter from a file', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vp-meta-'))
   const file = path.join(dir, 'x.md')
@@ -110,4 +114,22 @@ test('buildSidebar derives groups and items from the filesystem', () => {
 test('renderArtifact round-trips to JSON', () => {
   const sidebar = [{ text: 'G', link: '/g/', items: [] }]
   assert.deepEqual(JSON.parse(renderArtifact(sidebar)), sidebar)
+})
+
+import { normalizeBase, loadSidebar } from '../docs/.vitepress/config.mjs'
+
+test('normalizeBase forces leading and trailing slashes', () => {
+  assert.equal(normalizeBase('doc-site'), '/doc-site/')
+  assert.equal(normalizeBase('/base'), '/base/')
+  assert.equal(normalizeBase('/base/'), '/base/')
+  assert.equal(normalizeBase(''), '/')
+  assert.equal(normalizeBase('./'), './')
+})
+
+test('loadSidebar parses the artifact and falls back to an empty sidebar', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vp-cfg-'))
+  assert.deepEqual(loadSidebar(dir), [])
+  fs.writeFileSync(path.join(dir, 'sidebar.gen.json'), JSON.stringify([{ text: 'X', link: '/x/' }], null, 2))
+  assert.deepEqual(loadSidebar(dir), [{ text: 'X', link: '/x/' }])
+  fs.rmSync(dir, { recursive: true, force: true })
 })
