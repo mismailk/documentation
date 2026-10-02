@@ -7,7 +7,7 @@ All commands run from the repository root with npm.
 
 | Command | What it does |
 |---|---|
-| `npm install` | Install dependencies (Node 22 recommended; see `engines`). |
+| `npm install` | Install dependencies (Node 22 recommended; see the `engines` field in package.json for version requirements). |
 | `npm run docs:dev` | Generate the sidebar, then start the VitePress dev server. |
 | `npm run docs:build` | Generate the sidebar, then build the site to `docs/.vitepress/dist`. |
 | `npm run docs:preview` | Serve the built site from `docs/.vitepress/dist` locally. |
