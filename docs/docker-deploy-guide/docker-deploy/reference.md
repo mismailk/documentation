@@ -2,6 +2,10 @@
 title: 8. Reference
 order: 8
 ---
+<script setup>
+import { withBase } from 'vitepress'
+</script>
+
 # 8. Reference
 
 ## Files {#files}
@@ -47,5 +51,5 @@ docker run -d --name <CONTAINER> --init --network host --restart unless-stopped 
 
 ## Download {#download}
 
-[docker-deploy-kit.zip](./docker-deploy-kit.zip). See
+<a :href="withBase('/downloads/docker-deploy-kit.zip')" download>docker-deploy-kit.zip</a>. See
 [Download the kit](./#download-the-kit) for its contents.
