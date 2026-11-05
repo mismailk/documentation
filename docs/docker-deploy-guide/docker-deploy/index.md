@@ -1,6 +1,10 @@
 ---
 title: Docker Deploy Pipeline
 ---
+<script setup>
+import { withBase } from 'vitepress'
+</script>
+
 # Docker Deploy Pipeline
 
 How to put an Express (Node.js) application on the Docker deploy pipeline:
@@ -13,7 +17,7 @@ with this pipeline.
 
 Everything you copy to a server or into your app repo is in one zip:
 
-**[⬇ docker-deploy-kit.zip](./docker-deploy-kit.zip)**
+**<a :href="withBase('/downloads/docker-deploy-kit.zip')" download>⬇ docker-deploy-kit.zip</a>**
 
 Unzip it on your laptop. Commands in this guide are run from inside the
 unzipped `docker-deploy-kit/` folder:
