@@ -7,9 +7,7 @@ import { findUnmarkedCommandBlocks } from '../scripts/agent-docs.mjs'
 const GUIDE = 'docs/deploy-pipeline-guide/deploy-pipeline'
 
 // Pages not marked yet. Tasks remove entries as they mark pages; plan 3 empties it.
-export const PENDING = new Set([
-  'nextjs/go-live.md', 'nextjs/everyday-use.md',
-])
+export const PENDING = new Set([])
 
 // Bash blocks that are reference text, not commands to run. Match on the exact block body.
 export const REFERENCE_BLOCKS = [

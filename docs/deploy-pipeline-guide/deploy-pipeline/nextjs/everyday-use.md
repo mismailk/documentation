@@ -25,15 +25,19 @@ the variable alone changes nothing that is running.
 2. Push a commit to that environment's branch. If there is no code change,
    an empty commit does it:
 
+   ::: step level=ask where=github verify="both jobs go green"
    ```bash
    git commit --allow-empty -m "chore: rebuild with new public values" && git push
    ```
+   :::
 
 3. Check the new value is in the running container:
 
+   ::: step level=ask where=server verify="lists at least one file"
    ```bash
    docker exec <app>-staging grep -rl 'new-value' /app/.next
    ```
+   :::
 
 Values are taken literally, with one exception: Next.js expands `$NAME` and
 `${NAME}` in them (from the build's environment, or to nothing). For a
