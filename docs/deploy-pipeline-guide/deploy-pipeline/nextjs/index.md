@@ -24,9 +24,11 @@ The templates for your app repo are in this zip:
 
 **<a :href="withBase('/downloads/nextjs-deploy-kit.zip')" download>⬇ nextjs-deploy-kit.zip</a>**
 
+::: step level=run where=laptop
 ```bash
 unzip nextjs-deploy-kit.zip
 ```
+:::
 
 ```text
 nextjs-deploy-kit/

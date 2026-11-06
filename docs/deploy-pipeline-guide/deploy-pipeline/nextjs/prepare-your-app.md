@@ -66,15 +66,19 @@ On Next.js 14 and older this key goes under `experimental`.
 If the app has no `public/` folder, add an empty one so the Dockerfile's
 `COPY` of it works:
 
+::: step level=run where=laptop
 ```bash
 mkdir -p public && touch public/.gitkeep
 ```
+:::
 
 Check:
 
+::: step level=run where=laptop verify="ls prints .next/standalone/server.js"
 ```bash
 npm ci && npm run build && ls .next/standalone/server.js
 ```
+:::
 
 ## Fill the templates into your repo {#fill-templates}
 
@@ -116,6 +120,10 @@ Two template defaults to review:
 
 ## Public build values (`NEXT_PUBLIC_*`) {#public-build-values}
 
+::: agent
+Public values are not secrets: they ship to every browser. Write `~/public-env/<app>.staging.env` and `.production.env` yourself (`run`), from values in the repo or that the developer gives you. Refuse any name that isn't `NEXT_PUBLIC_*`.
+:::
+
 Skip this section if your app has no `NEXT_PUBLIC_*` values.
 
 Write each environment's public values as a small dotenv file on your
@@ -123,9 +131,11 @@ laptop, outside the app repo. You paste them into GitHub
 ([below](#public-env-variables)) and use them for
 [the local test](#test-image-locally):
 
+::: step level=run where=laptop
 ```bash
 mkdir -p ~/public-env
 ```
+:::
 
 `~/public-env/<app>.staging.env`:
 
@@ -174,12 +184,18 @@ What follows from baking them in:
 
 ## Test the image locally before pushing {#test-image-locally}
 
+::: agent
+Create the test `.env` yourself, with throwaway values that point at local services. Never copy values from a real `.env`. The `docker run` blocks the terminal, so run it in the background and stop it after the checks.
+:::
+
 Build it the way CI builds staging, with the staging public values (leave
 out `--build-arg` if the app has none):
 
+::: step level=run where=laptop verify="the image builds"
 ```bash
 docker build --build-arg PUBLIC_ENV_B64="$(base64 < ~/public-env/<app>.staging.env | tr -d '\n')" -t <app>:local .
 ```
+:::
 
 Make a throwaway server `.env` outside the repo, with a free port that is
 **not** 3000 and server values that point at local or test services. Don't
@@ -195,9 +211,11 @@ mode `644` is fine.
 
 Run it the way the server will:
 
+::: step level=run where=laptop verify="the app starts; the curl checks below answer"
 ```bash
 docker run --rm --init --network host --memory 384m --memory-swap 384m -v "$HOME/<app>-test.env:/app/.env:ro" <app>:local
 ```
+:::
 
 ::: warning Docker Desktop (macOS, Windows)
 Host networking is off by default in Docker Desktop: it needs version 4.34
@@ -214,42 +232,54 @@ In another terminal, check each of these.
 
 The app listens on the `.env` port. Any HTTP code (not `000`) means it's up:
 
+::: step level=run where=laptop verify="any HTTP code, not 000"
 ```bash
 curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:4100/
 ```
+:::
 
 It does **not** listen on 3000. This should print `000`, unless something
 else on your laptop uses port 3000:
 
+::: step level=run where=laptop verify="prints 000 (nothing listens on 3000), unless another local app uses 3000"
 ```bash
 curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:3000/
 ```
+:::
 
 Static assets are served. This should print `200` (if `/` redirects, use the
 path of a page that renders):
 
+::: step level=run where=laptop verify="prints 200"
 ```bash
 asset=$(curl -s http://127.0.0.1:4100/ | grep -o '/_next/static/[^"]*' | head -n1) && curl -s -o /dev/null -w '%{http_code}\n' "http://127.0.0.1:4100$asset"
 ```
+:::
 
 A public value is baked into the build. Use one of your staging values;
 this lists at least one file:
 
+::: step level=run where=laptop verify="lists at least one file"
 ```bash
 docker run --rm --entrypoint grep <app>:local -rl 'staging-api.example.com' /app/.next
 ```
+:::
 
 The public values file stayed in the build stage. This prints `ok`:
 
+::: step level=run where=laptop verify="prints ok"
 ```bash
 docker run --rm --entrypoint sh <app>:local -c 'test ! -e /app/.env.production.local && echo ok'
 ```
+:::
 
 Memory use stays well under the cap while you click through the app:
 
+::: step level=run where=laptop verify="memory well under the cap"
 ```bash
 docker stats --no-stream
 ```
+:::
 
 If a page crashes with `ENOENT` in the container's output, a runtime file is
 missing from `.next/standalone`. Add it to `outputFileTracingIncludes`
@@ -269,9 +299,11 @@ loads every `.env*` file it finds (`.env`, `.env.local`, `.env.production`,
 `.env.production.local`), and the port comes from `next start -p` or the
 shell, not from those files. If the app runs that way today, list its files:
 
+::: step level=ask where=server
 ```bash
 ls -la /path/to/current/app/.env*
 ```
+:::
 
 Merge them into one file. When a key appears in several, keep the value
 from the file that wins today: `.env.production.local`, then `.env.local`,
@@ -293,6 +325,10 @@ If the app runs under pm2 today, also check for
 
 ## Public build values on GitHub {#public-env-variables}
 
+
+::: agent
+Creating the repository variables is `ask`/`github`: run `gh variable set PUBLIC_ENV_STAGING < ~/public-env/<app>.staging.env` (and the production one) once the developer approves.
+:::
 
 Skip this if the app has no `NEXT_PUBLIC_*` values.
 
