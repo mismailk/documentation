@@ -1,5 +1,9 @@
 # AGENTS.md
 
+Instructions for coding agents working in this repository (Claude Code, opencode and others).
+
+Current status, the next step, decisions and known issues are in [.superpowers/PROGRESS.md](.superpowers/PROGRESS.md).
+
 VitePress 1.6 docs site where the `docs/` filesystem is the single source of truth for the sidebar. `scripts/generate-sidebar.mjs` scans `docs/` recursively and writes `docs/.vitepress/sidebar.gen.json`; `docs/.vitepress/config.mjs` loads that JSON as `themeConfig.sidebar`. There is no hand-maintained navigation config.
 
 ## Commands
@@ -21,6 +25,31 @@ Same as the repo's own contribution guide (`docs/contributing/index.md`) — thi
 5. `git push origin <branch>` and open a PR against `main` describing: what changed, why, and any relevant context or issues addressed
 6. After the PR is merged, CI builds and deploys to GitHub Pages automatically — no manual deploy step
 
+A change is done only when `npm test` and `npm run docs:build` both pass (VitePress fails the build on dead links).
+
+## Agent workflow
+
+When agents make a change, it goes through these stages. Every stage has one fixed owner:
+
+| Stage | Owner |
+| --- | --- |
+| Spec and plan | **Claude Code** |
+| Implementation | **opencode** |
+| Verification and validation | **Claude Code** |
+
+1. **Brainstorm or spec** (Claude Code, only for new behaviour or a new guide). Specs go in `.superpowers/specs/YYYY-MM-DD-<topic>-design.md`.
+2. **Plan** (Claude Code). Plans go in `.superpowers/plans/YYYY-MM-DD-<topic>.md`, have **at most 4 tasks**, and include exact files, content, commands and expected output. Each task ends with something that can be checked on its own; bigger work is split into several plans. The user reviews each plan before implementation starts.
+3. **Implement** (opencode). When the user says "start implementation", the reviewed plan goes straight to opencode. opencode works on the plan's branch (for example `docs/<topic>`), task by task and test-first where code changes, with one commit per task. It runs every check the plan lists and stops to report anything that fails, rather than working around it. It never writes or changes specs or plans.
+4. **Verify and validate** (Claude Code). Claude Code doesn't rely on opencode's report. It reruns every check, reviews the diff against the plan, and previews changed pages with `npm run docs:dev` (sidebar label and position, links, light and dark mode). Failures are reported as they are, and a test is never weakened to make it pass.
+5. **Review and PR** (Claude Code) against the plan, before the work counts as done. The branch is pushed and the PR opened (step 5 of the contribution workflow) only when the user asks.
+
+Specs and plans live in `.superpowers/`, never under `docs/`: everything under `docs/` is published to the site.
+
+## Conventions
+
+- **Commits:** Conventional Commits, for example `docs: …`, `fix: …`, `feat: …`, `test: …`, `docs(plan): …`.
+- **Git:** never push, force-push or touch `main` without the user's explicit request.
+
 ## High-signal rules
 
 - **Always go through the npm scripts.** A raw `vitepress build docs` (or `dev`) skips the generator: config.mjs then falls back to an *empty* sidebar with a warning.
@@ -32,4 +61,4 @@ Same as the repo's own contribution guide (`docs/contributing/index.md`) — thi
 - **Malformed frontmatter YAML degrades gracefully** (title/order become `undefined`, no crash) — tests pin this behavior; don't "fix" it.
 - **Tests import helpers from `docs/.vitepress/config.mjs`** (`normalizeBase`, `loadSidebar`) as well as the script — keep those named exports when refactoring the config.
 - README and CI require **Node 22** even though `package.json` `engines` says `>=18`.
-- `.superpowers/` holds historical dev plans/specs from this project's own development — not part of the site; ignore it.
+- `.superpowers/` holds the specs and plans of the agent workflow (above) — not part of the site. The 2026-09-27 files there are historical; don't act on them.
