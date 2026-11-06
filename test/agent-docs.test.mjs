@@ -120,3 +120,16 @@ test('writeAgentDocs mirrors the scoped tree under agent/ and skips other sectio
   assert.ok(!fs.existsSync(path.join(out, 'agent/reference')))
   fs.rmSync(root, { recursive: true, force: true })
 })
+
+import { extractMain } from '../scripts/compare-doc-html.mjs'
+
+test('extractMain returns the main element only', () => {
+  assert.equal(extractMain('<head>x</head><main class="m"><p>a</p></main><footer>f</footer>'), '<main class="m"><p>a</p></main>')
+  assert.equal(extractMain('<p>none</p>'), '')
+})
+
+test('the Deploy Pipeline index has an agent preamble and no unmarked command blocks', () => {
+  const src = fs.readFileSync('docs/deploy-pipeline-guide/deploy-pipeline/index.md', 'utf8')
+  assert.match(src, /::: agent\n/)
+  assert.deepEqual(findUnmarkedCommandBlocks(src), [])
+})
