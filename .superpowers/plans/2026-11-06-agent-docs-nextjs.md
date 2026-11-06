@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Mark every runnable command on the Next.js path, empty the `PENDING` list so the guide-wide check covers every page, and prove one last time that the human pages are unchanged.
+**Goal:** Mark every runnable command on the Next.js path, empty the `PENDING` list so the guide-wide check covers every page, and prove one last time that the human pages are unchanged. Then tell agents about the four-colon marker, and document the markers in AGENTS.md.
 
-**Architecture:** Content only, using plan 1's markers and plan 2's guide-wide test. No code changes.
+**Architecture:** Content only, using plan 1's markers and plan 2's guide-wide test. No code changes. Task 3 was added after plan 2 was verified: plan 2 introduced `:::: step` around `::: v-pre`, and the preamble and AGENTS.md don't mention it yet.
 
 **Tech Stack:** As in plans 1 and 2.
 
@@ -153,4 +153,41 @@ Expected: `80`. That is 1 (index) + 15 + 20 + 14 + 5 + 3 (shared) + 1 + 4 (Expre
 ```bash
 git add docs/deploy-pipeline-guide/deploy-pipeline/nextjs/go-live.md docs/deploy-pipeline-guide/deploy-pipeline/nextjs/everyday-use.md test/guide-markers.test.mjs
 git commit -m "docs: mark the Next.js go-live and everyday-use steps for agents"
+```
+
+---
+
+### Task 3: Tell agents about four-colon markers, and document the markers
+
+**Files:**
+- Modify: `docs/deploy-pipeline-guide/deploy-pipeline/index.md` (inside the existing `::: agent` preamble only)
+- Modify: `AGENTS.md`
+
+- [ ] **Step 1: Extend the preamble.** In `index.md`, right after the existing line `Command blocks outside a step marker are reference material. Do not run them.`, add one blank line and then this line verbatim:
+
+```md
+A marker can also use four colons (`:::: step …` closed by `::::`) when it wraps a larger block. It means the same thing. The inline commands in ✅ Checkpoint lists aren't wrapped: run each one at the level of the step it checks.
+```
+
+- [ ] **Step 2: Update AGENTS.md.**
+  - Line 14: change `(12 tests)` to `(37 tests)`.
+  - Under `## High-signal rules`, add this bullet verbatim right after the bullet that starts `- **Tests import helpers from`:
+
+```md
+- **Agent markers (Deploy Pipeline guide).** `::: step level=<run|ask|never> where=<laptop|server|github> verify="…"` wraps each runnable command block, and `::: agent` holds agent-only text. Both render nothing on the site. `npm run docs:build` writes agent copies to `dist/agent/<path>.md`. Never put a `::: step` inside `::: v-pre`: wrap the v-pre block from outside with `:::: step` … `::::` instead. `test/guide-markers.test.mjs` fails on any unmarked `bash`/`sh` block in the guide; file excerpts go in its `REFERENCE_BLOCKS`. To prove the human pages didn't change, build `main` in a temporary worktree and run `node scripts/compare-doc-html.mjs <main dist> <branch dist>`. Only the guide's `index.html` may differ (the copy-link button).
+```
+
+- [ ] **Step 3: Run the checks**
+
+Run: `npm test && npm run docs:build`
+Expected: 37 tests pass, and the build passes with 20 agent pages.
+
+Run: `grep -c 'four colons' docs/.vitepress/dist/agent/deploy-pipeline-guide/deploy-pipeline/index.md docs/.vitepress/dist/deploy-pipeline-guide/deploy-pipeline/index.html`
+Expected: `1` for the agent copy and `0` for the HTML page.
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add docs/deploy-pipeline-guide/deploy-pipeline/index.md AGENTS.md
+git commit -m "docs: explain four-colon step markers to agents and in AGENTS.md"
 ```
