@@ -2,6 +2,7 @@ import { defineConfig } from 'vitepress'
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { useAgentContainers } from '../../scripts/agent-docs.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -33,6 +34,7 @@ export default defineConfig({
   title: 'Documentation',
   description: 'A VitePress documentation site with filesystem-driven navigation.',
   base: normalizeBase(process.env.VITEPRESS_BASE || '/'),
+  markdown: { config: (md) => useAgentContainers(md) },
   themeConfig: {
     search: { provider: 'local' },
     sidebar: loadSidebar(),
