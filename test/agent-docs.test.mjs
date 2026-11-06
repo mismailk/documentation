@@ -133,3 +133,25 @@ test('the Deploy Pipeline index has an agent preamble and no unmarked command bl
   assert.match(src, /::: agent\n/)
   assert.deepEqual(findUnmarkedCommandBlocks(src), [])
 })
+
+test('an unclosed agent container fails the render instead of dropping the rest of the page', () => {
+  assert.throws(() => md().render('# T\n\n::: agent\nleaked text\n'), /unclosed/)
+})
+
+test('findUnmarkedCommandBlocks rejects an unclosed container', () => {
+  assert.throws(
+    () => findUnmarkedCommandBlocks('::: step level=run where=laptop\n```bash\nnpm ci\n```\n'),
+    /unclosed/,
+  )
+})
+
+test('findUnmarkedCommandBlocks sees fences indented up to three spaces', () => {
+  const src = ['# T', '   ```bash', '   npm ci', '   ```'].join('\n')
+  assert.deepEqual(findUnmarkedCommandBlocks(src), [{ line: 2, code: 'npm ci' }])
+})
+
+test('toAgentCopy keeps ::: inside a code fence untouched', () => {
+  const src = ['# T', '', '````md', '::: agent', 'not a container', ':::', '````', ''].join('\n')
+  const out = toAgentCopy(src, opts)
+  assert.match(out, /````md\n::: agent\nnot a container\n:::\n````/)
+})

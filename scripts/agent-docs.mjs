@@ -61,28 +61,32 @@ function scanSource(source) {
 
     if (fence) {
       inFence[i] = true
-      const close = new RegExp(`^${fence.char}{${fence.length},}\\s*$`)
+      const close = new RegExp(`^ {0,3}${fence.char}{${fence.length},}\\s*$`)
       if (close.test(line)) {
         fences.push({
           start: fence.start,
           end: i,
           lang: fence.lang,
           inStep: fence.inStep,
-          code: lines.slice(fence.start + 1, i).join('\n'),
+          code: lines
+            .slice(fence.start + 1, i)
+            .map((body) => body.replace(new RegExp(`^ {0,${fence.indent}}`), ''))
+            .join('\n'),
         })
         fence = null
       }
       continue
     }
 
-    const fenceOpen = line.match(/^(`{3,}|~{3,})\s*([^\s`]*)/)
+    const fenceOpen = line.match(/^( {0,3})(`{3,}|~{3,})\s*([^\s`]*)/)
     if (fenceOpen) {
       inFence[i] = true
       fence = {
-        char: fenceOpen[1][0],
-        length: fenceOpen[1].length,
+        char: fenceOpen[2][0],
+        length: fenceOpen[2].length,
+        indent: fenceOpen[1].length,
         start: i,
-        lang: fenceOpen[2],
+        lang: fenceOpen[3],
         inStep: stack.some((c) => c.name === 'step'),
       }
       continue
@@ -98,6 +102,11 @@ function scanSource(source) {
       const closed = stack.pop()
       if (closed) containers.push({ name: closed.name, start: closed.start, end: i })
     }
+  }
+
+  if (stack.length > 0) {
+    const open = stack[stack.length - 1]
+    throw new Error(`unclosed ::: ${open.name} container (line ${open.start + 1})`)
   }
 
   return { lines, fences, containers, inFence }
@@ -140,6 +149,10 @@ export function useAgentContainers(md) {
           depth -= 1
           if (depth === 0) break
         }
+      }
+      if (j === tokens.length || tokens[j].markup === '') {
+        const line = tokens[i].map ? tokens[i].map[0] + 1 : '?'
+        throw new Error(`unclosed ::: agent container (line ${line})`)
       }
       tokens.splice(i, j - i + 1)
       i -= 1
