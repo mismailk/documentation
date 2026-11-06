@@ -188,3 +188,32 @@ test('toAgentCopy drops the human-only copy-link button', () => {
   assert.doesNotMatch(out, /agent-link|copyAgentLink/)
   assert.match(out, /Intro\.\n\nNext\./)
 })
+
+test('toAgentCopy writes full URLs when an origin is given', () => {
+  const o = { relPath: 'deploy-pipeline-guide/deploy-pipeline/express/index.md', base: '/documentation/', origin: 'https://x.github.io/' }
+  const src = [
+    '# T',
+    '[a](./prepare-your-app#pick-your-values) [b](../) [c](../add-an-app#env-file) [e](../../../reference/commands) [g](#steps)',
+    `**<a :href="withBase('/downloads/express-deploy-kit.zip')" download>⬇ kit</a>**`,
+  ].join('\n')
+  const out = toAgentCopy(src, o)
+  const A = 'https://x.github.io/documentation/agent/deploy-pipeline-guide/deploy-pipeline'
+  assert.match(out, new RegExp(`\\[a\\]\\(${A}/express/prepare-your-app\\.md#pick-your-values\\)`))
+  assert.match(out, new RegExp(`\\[b\\]\\(${A}/index\\.md\\)`))
+  assert.match(out, new RegExp(`\\[c\\]\\(${A}/add-an-app\\.md#env-file\\)`))
+  assert.match(out, /\[e\]\(https:\/\/x\.github\.io\/documentation\/reference\/commands\)/)
+  assert.match(out, /\[g\]\(#steps\)/)
+  assert.match(out, /\[⬇ kit\]\(https:\/\/x\.github\.io\/documentation\/downloads\/express-deploy-kit\.zip\)/)
+  assert.doesNotMatch(out, /github\.io\/\//)
+})
+
+test('writeAgentDocs passes the origin through', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'agent-origin-'))
+  const src = path.join(root, 'docs'), out = path.join(root, 'dist')
+  fs.mkdirSync(path.join(src, 'deploy-pipeline-guide/deploy-pipeline'), { recursive: true })
+  fs.writeFileSync(path.join(src, 'deploy-pipeline-guide/deploy-pipeline/index.md'), '# I\n\n[s](./server-setup)\n')
+  writeAgentDocs({ srcDir: src, outDir: out, base: '/', origin: 'https://x.github.io' })
+  const copy = fs.readFileSync(path.join(out, 'agent/deploy-pipeline-guide/deploy-pipeline/index.md'), 'utf8')
+  assert.match(copy, /\[s\]\(https:\/\/x\.github\.io\/agent\/deploy-pipeline-guide\/deploy-pipeline\/server-setup\.md\)/)
+  fs.rmSync(root, { recursive: true, force: true })
+})

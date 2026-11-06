@@ -40,11 +40,13 @@ export default defineConfig({
     sidebar: loadSidebar(),
   },
   buildEnd: (siteConfig) => {
+    const origin = process.env.VITEPRESS_SITE_ORIGIN
     const written = writeAgentDocs({
       srcDir: siteConfig.srcDir,
       outDir: siteConfig.outDir,
       base: siteConfig.site.base,
+      origin,
     })
-    console.log(`[agent-docs] wrote ${written.length} agent pages`)
+    console.log(`[agent-docs] wrote ${written.length} agent pages` + (origin ? ` with full URLs for ${origin}` : ''))
   },
 })

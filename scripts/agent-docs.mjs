@@ -178,12 +178,15 @@ function siteUrl(base, pagePath) {
 
 // Rewrite one line of markdown: withBase anchors to plain links, and relative
 // page links either to the matching agent copy (.md) or to the website URL.
-function rewriteLine(line, { relPath, base, scope }) {
+// With an origin, every rewritten link is a full URL so an agent can follow it
+// without knowing which URL the page was fetched from.
+function rewriteLine(line, { relPath, base, scope, origin }) {
   const dir = path.posix.dirname(relPath)
+  const prefix = origin ? `${origin}` : ''
 
   let out = line.replace(
     /<a\s+[^>]*:href="withBase\('([^']+)'\)"[^>]*>([\s\S]*?)<\/a>/g,
-    (_, target, text) => `[${text}](${joinBase(base, target)})`,
+    (_, target, text) => `[${text}](${prefix}${joinBase(base, target)})`,
   )
 
   out = out.replace(/\[([^\]]*)\]\(([^)\s]+)\)/g, (whole, text, target) => {
@@ -204,11 +207,12 @@ function rewriteLine(line, { relPath, base, scope }) {
     }
 
     if (pagePath.startsWith(`${scope}/`)) {
+      if (origin) return `[${text}](${origin}${joinBase(base, path.posix.normalize(`agent/${pagePath}`))}${hash})`
       let relative = path.posix.relative(dir, pagePath)
       if (!relative.startsWith('.')) relative = `./${relative}`
       return `[${text}](${relative}${hash})`
     }
-    return `[${text}](${siteUrl(base, pagePath)}${hash})`
+    return `[${text}](${prefix}${siteUrl(base, pagePath)}${hash})`
   })
 
   return out
@@ -216,7 +220,8 @@ function rewriteLine(line, { relPath, base, scope }) {
 
 // Turn one guide source page into its agent copy: heading from the title,
 // no script/style, agent and v-pre unwrapped, links rewritten for an agent.
-export function toAgentCopy(source, { relPath, base, scope = AGENT_SCOPE }) {
+export function toAgentCopy(source, { relPath, base, scope = AGENT_SCOPE, origin }) {
+  const siteOrigin = origin ? origin.replace(/\/+$/, '') : ''
   const parsed = matter(source)
   let content = parsed.content
 
@@ -243,7 +248,7 @@ export function toAgentCopy(source, { relPath, base, scope = AGENT_SCOPE }) {
   }
 
   const lines = scan.lines.map((line, i) =>
-    scan.inFence[i] ? line : rewriteLine(line, { relPath, base, scope }),
+    scan.inFence[i] ? line : rewriteLine(line, { relPath, base, scope, origin: siteOrigin }),
   )
   return lines.join('\n')
 }
@@ -260,13 +265,13 @@ function collectMarkdown(dir) {
 
 // Write <outDir>/agent/<relPath> for every .md under <srcDir>/<scope>.
 // Returns the written relPaths, sorted.
-export function writeAgentDocs({ srcDir, outDir, base, scope = AGENT_SCOPE }) {
+export function writeAgentDocs({ srcDir, outDir, base, scope = AGENT_SCOPE, origin }) {
   const written = []
   for (const file of collectMarkdown(path.join(srcDir, scope))) {
     const relPath = path.relative(srcDir, file).split(path.sep).join('/')
     const dest = path.join(outDir, 'agent', relPath)
     fs.mkdirSync(path.dirname(dest), { recursive: true })
-    fs.writeFileSync(dest, toAgentCopy(fs.readFileSync(file, 'utf8'), { relPath, base, scope }))
+    fs.writeFileSync(dest, toAgentCopy(fs.readFileSync(file, 'utf8'), { relPath, base, scope, origin }))
     written.push(relPath)
   }
   return written.sort()
