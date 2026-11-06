@@ -1,8 +1,9 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
+import os from 'node:os'
 import path from 'node:path'
-import { findUnmarkedCommandBlocks } from '../scripts/agent-docs.mjs'
+import { findUnmarkedCommandBlocks, writeAgentDocs } from '../scripts/agent-docs.mjs'
 
 const GUIDE = 'docs/deploy-pipeline-guide/deploy-pipeline'
 
@@ -48,4 +49,29 @@ test('PENDING and REFERENCE_BLOCKS only name real pages', () => {
   const all = new Set(pages(GUIDE))
   for (const p of PENDING) assert.ok(all.has(p), `PENDING names a missing page: ${p}`)
   for (const r of REFERENCE_BLOCKS) assert.ok(all.has(r.file), `REFERENCE_BLOCKS names a missing page: ${r.file}`)
+})
+
+test('every link in the agent copies resolves to an agent page', () => {
+  const out = fs.mkdtempSync(path.join(os.tmpdir(), 'agent-links-'))
+  writeAgentDocs({ srcDir: 'docs', outDir: out, base: '/' })
+  const root = path.join(out, 'agent')
+  const broken = []
+  for (const page of pages(path.join(root, 'deploy-pipeline-guide/deploy-pipeline'))) {
+    const file = path.join(root, 'deploy-pipeline-guide/deploy-pipeline', page)
+    const text = fs.readFileSync(file, 'utf8').replace(/^ *```[\s\S]*?^ *```/gm, '')
+    for (const [, target] of text.matchAll(/\]\((\.{1,2}\/[^)#\s]*)/g)) {
+      if (!fs.existsSync(path.join(path.dirname(file), target))) broken.push(`${page} -> ${target}`)
+    }
+  }
+  fs.rmSync(out, { recursive: true, force: true })
+  assert.deepEqual(broken, [])
+})
+
+test('the agent index lists the whole route for both paths', () => {
+  const src = fs.readFileSync(path.join(GUIDE, 'index.md'), 'utf8')
+  const route = src.slice(src.indexOf('**Route.**'), src.indexOf('**Pick the path.**'))
+  for (const link of ['./how-it-works', './express/app-readiness', './express/prepare-your-app', './server-setup', './add-an-app', './go-live',
+    './nextjs/how-it-works', './nextjs/app-readiness', './nextjs/prepare-your-app', './nextjs/go-live']) {
+    assert.ok(route.includes(`](${link})`), `route list is missing ${link}`)
+  }
 })

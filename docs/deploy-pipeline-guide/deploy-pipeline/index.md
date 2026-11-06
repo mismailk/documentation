@@ -49,6 +49,25 @@ A marker can also use four colons (`:::: step …` closed by `::::`) when it wra
 
 **Placeholders.** Fill `<app>`, `<org>/<repo>` and the template values from the repo (`git remote -v`, `package.json`). Ask the developer only for what the repo can't tell you: server host, SSH port, GitHub user.
 
+**Route.** Read the whole route first, then work through it in order. Skip Server Setup if the server already runs the pipeline for another app.
+
+- Express:
+  1. [How It Works](./how-it-works)
+  2. [Is Your App Ready?](./express/app-readiness)
+  3. [Prepare Your App](./express/prepare-your-app)
+  4. [Server Setup](./server-setup)
+  5. [Add the App to the Server](./add-an-app)
+  6. [First Deploy and Go-Live](./go-live)
+- Next.js:
+  1. [How It Works](./how-it-works), then [Next.js specifics](./nextjs/how-it-works)
+  2. [Is Your App Ready?](./nextjs/app-readiness)
+  3. [Prepare Your App](./nextjs/prepare-your-app)
+  4. [Server Setup](./server-setup)
+  5. [Add the App to the Server](./add-an-app)
+  6. [Go-Live](./nextjs/go-live), which adds the Next.js checks to [First Deploy and Go-Live](./go-live)
+
+After go-live: [Everyday Use](./everyday-use), [Troubleshooting](./troubleshooting), [Reference](./reference).
+
 **Pick the path.** Check `package.json` dependencies: `next` means the [Next.js guide](./nextjs/), and `express` means the [Express guide](./express/). If neither matches, ask. Follow that guide's step table in order. It sends you to the shared stages linked below.
 
 **Checkpoints.** Each stage ends with a ✅ Checkpoint. Run the checkpoint items you're allowed to run, ask for the rest, and don't start the next stage until every item passes.
