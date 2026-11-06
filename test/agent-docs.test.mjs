@@ -155,3 +155,36 @@ test('toAgentCopy keeps ::: inside a code fence untouched', () => {
   const out = toAgentCopy(src, opts)
   assert.match(out, /````md\n::: agent\nnot a container\n:::\n````/)
 })
+
+test('findUnmarkedCommandBlocks handles markers and fences indented in list items', () => {
+  const marked = ['1. Item', '', '   ::: step level=ask where=server', '   ```bash', '   ssh x', '   ```', '   :::'].join('\n')
+  assert.deepEqual(findUnmarkedCommandBlocks(marked), [])
+  const unmarked = ['1. Item', '', '   ```bash', '   ssh x', '   ```'].join('\n')
+  assert.deepEqual(findUnmarkedCommandBlocks(unmarked), [{ line: 3, code: 'ssh x' }])
+})
+
+test('an indented step inside a list item renders exactly its content', () => {
+  const plain = '1. Item\n\n   ```bash\n   ssh x\n   ```\n2. Next\n'
+  const wrapped = '1. Item\n\n   ::: step level=ask where=server\n   ```bash\n   ssh x\n   ```\n   :::\n2. Next\n'
+  assert.equal(md().render(wrapped), md().render(plain))
+})
+
+test('toAgentCopy keeps indented step markers and unwraps indented agent notes', () => {
+  const out = toAgentCopy('# T\n\n1. Item\n\n   ::: agent\n   Note.\n   :::\n\n   ::: step level=run where=laptop\n   ```bash\n   ls\n   ```\n   :::\n', opts)
+  assert.match(out, /\n   Note\.\n/)
+  assert.doesNotMatch(out, /::: agent/)
+  assert.match(out, /   ::: step level=run where=laptop\n   ```bash\n   ls\n   ```\n   :::/)
+})
+
+test('a four-colon step around v-pre counts as marked and survives in the agent copy', () => {
+  const src = [':::: step level=ask where=server', '::: v-pre', 'Text:', '', '```bash', "docker ps --format '{{.Names}}'", '```', ':::', '::::'].join('\n')
+  assert.deepEqual(findUnmarkedCommandBlocks(src), [])
+  const out = toAgentCopy(`# T\n\n${src}\n`, opts)
+  assert.match(out, /:::: step level=ask where=server\nText:\n\n```bash\ndocker ps --format '\{\{\.Names\}\}'\n```\n::::/)
+})
+
+test('toAgentCopy drops the human-only copy-link button', () => {
+  const out = toAgentCopy('# T\n\nIntro.\n\n<p class="agent-link"><button type="button" @click="copyAgentLink">{{ copied ? \'Copied\' : \'Copy link for your agent\' }}</button></p>\n\nNext.\n', opts)
+  assert.doesNotMatch(out, /agent-link|copyAgentLink/)
+  assert.match(out, /Intro\.\n\nNext\./)
+})

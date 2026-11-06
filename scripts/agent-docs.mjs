@@ -61,7 +61,7 @@ function scanSource(source) {
 
     if (fence) {
       inFence[i] = true
-      const close = new RegExp(`^ {0,3}${fence.char}{${fence.length},}\\s*$`)
+      const close = new RegExp(`^ *${fence.char}{${fence.length},}\\s*$`)
       if (close.test(line)) {
         fences.push({
           start: fence.start,
@@ -78,7 +78,7 @@ function scanSource(source) {
       continue
     }
 
-    const fenceOpen = line.match(/^( {0,3})(`{3,}|~{3,})\s*([^\s`]*)/)
+    const fenceOpen = line.match(/^( *)(`{3,}|~{3,})\s*([^\s`]*)/)
     if (fenceOpen) {
       inFence[i] = true
       fence = {
@@ -92,15 +92,18 @@ function scanSource(source) {
       continue
     }
 
-    const containerOpen = line.match(/^:::+\s*(\S+)/)
-    if (containerOpen) {
-      stack.push({ name: containerOpen[1], start: i })
+    // Check the close first: with the open pattern below, `::::` alone would
+    // otherwise parse as a container named `:`.
+    if (/^ *:::+\s*$/.test(line)) {
+      const closed = stack.pop()
+      if (closed) containers.push({ name: closed.name, start: closed.start, end: i })
       continue
     }
 
-    if (/^:::+\s*$/.test(line)) {
-      const closed = stack.pop()
-      if (closed) containers.push({ name: closed.name, start: closed.start, end: i })
+    const containerOpen = line.match(/^ *:::+\s*(\S+)/)
+    if (containerOpen) {
+      stack.push({ name: containerOpen[1], start: i })
+      continue
     }
   }
 
@@ -224,6 +227,7 @@ export function toAgentCopy(source, { relPath, base, scope = AGENT_SCOPE }) {
   content = content
     .replace(/<script\b[\s\S]*?<\/script>\s*/g, '')
     .replace(/<style\b[\s\S]*?<\/style>\s*/g, '')
+    .replace(/^<p class="agent-link".*(\n\n?|$)/gm, '')
 
   let scan = scanSource(content)
   const drop = new Set()
