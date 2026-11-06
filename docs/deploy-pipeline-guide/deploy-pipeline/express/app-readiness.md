@@ -1,8 +1,8 @@
 ---
-title: 2. Is Your App Ready?
+title: Is Your App Ready?
 order: 2
 ---
-# 2. Is Your App Ready?
+# Is Your App Ready?
 
 Go through this checklist before touching the server. Each item is something
 the container setup depends on.

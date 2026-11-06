@@ -1,18 +1,18 @@
 ---
-title: 3. Server Setup
-order: 3
+title: 2. Server Setup
+order: 2
 ---
-# 3. Server Setup
+# 2. Server Setup
 
 ::: tip Once per server
 Skip this stage if the server already runs the pipeline for another app; go
-to [4. Add Your App](./add-your-app).
+to [3. Add an App to the Server](./add-an-app).
 :::
 
 You need `sudo` on the server (Ubuntu, x86_64). The setup does **not** touch
 Nginx, databases, pm2 or anything else already running.
 
-## 3.1 What `server-setup.sh` does {#what-server-setup-does}
+## 2.1 What `server-setup.sh` does {#what-server-setup-does}
 
 1. Installs Docker Engine (`docker-ce`) from Docker's official apt repository.
 2. Adds a 2 GB swap file, but only if the server has no swap and has at least
@@ -20,17 +20,19 @@ Nginx, databases, pm2 or anything else already running.
 3. Creates the system user `deployer` (in the `docker` group, password
    locked) and adds `ubuntu` to the `docker` group.
 4. Creates `/opt/deploy/{apps,locks,logs}` and installs
-   `/opt/deploy/deploy.sh`.
+   `/opt/deploy/deploy.sh` from the folder the script runs in.
 5. Authorizes each CI public key you pass as `staging:<file>` or
-   `production:<file>`, pinned to that environment:
+   `production:<file>`, pinned to that environment
+   ([3.6](./add-an-app#ci-keys)):
 
    ```text
-   restrict,command="/opt/deploy/deploy.sh --env staging" ssh-ed25519 AAAA... github-actions-staging
+   restrict,command="/opt/deploy/deploy.sh --env staging" ssh-ed25519 AAAA... github-actions-<app>-staging
    ```
 
-It is safe to run again: it skips what exists and only adds new keys.
+It is safe to run again: it skips what exists, reinstalls `deploy.sh` and
+only adds new keys.
 
-## 3.2 Pre-checks on the server {#pre-checks}
+## 2.2 Pre-checks on the server {#pre-checks}
 
 Each of these should print nothing (otherwise see the note below):
 
@@ -63,34 +65,9 @@ sudo sshd -T | grep -Ei '^(allowusers|allowgroups|usepam) '
 If you see `allowusers`/`allowgroups`, add `deployer` there and reload sshd.
 `usepam` must be `yes`.
 
-## 3.3 Make the CI keys (on your laptop) {#make-ci-keys}
+## 2.3 Copy the scripts and run the setup {#run-setup}
 
-One key pair per environment, outside any git repository, no passphrase:
-
-```bash
-mkdir -p ~/deploy-keys && cd ~/deploy-keys
-```
-
-```bash
-ssh-keygen -t ed25519 -N '' -C github-actions-staging -f deploy_staging
-```
-
-```bash
-ssh-keygen -t ed25519 -N '' -C github-actions-production -f deploy_production
-```
-
-The private files (`deploy_staging`, `deploy_production`) go into GitHub
-later ([4.6](./add-your-app#github-settings)), and then you delete them.
-
-::: tip One server per environment, or both on one server
-Pass only the keys for the environments that server hosts. If staging and
-production share a server, add the production key only when you are ready to
-go live in production ([5.3](./go-live#production)).
-:::
-
-## 3.4 Copy the scripts and run the setup {#run-setup}
-
-From the unzipped `docker-deploy-kit/` folder on your laptop (see
+From the unzipped `deploy-pipeline-kit/` folder on your laptop (see
 [Download the kit](./#download-the-kit)):
 
 ```bash
@@ -98,7 +75,7 @@ ssh -p <ssh-port> ubuntu@<server-host> mkdir -p docker-deploy-server
 ```
 
 ```bash
-scp -P <ssh-port> server/*.sh server/app.conf.template ~/deploy-keys/deploy_staging.pub ubuntu@<server-host>:~/docker-deploy-server/
+scp -P <ssh-port> server/*.sh server/app.conf.template ubuntu@<server-host>:~/docker-deploy-server/
 ```
 
 On the server:
@@ -108,19 +85,30 @@ cd ~/docker-deploy-server && chmod +x *.sh
 ```
 
 ```bash
-sudo ./server-setup.sh staging:deploy_staging.pub
+sudo ./server-setup.sh
 ```
 
 Options: `--skip-docker` (keep an existing `docker-ce`), `--skip-swap`.
-Log out and back in afterwards so `ubuntu` can use `docker` without `sudo`.
+CI keys are added per app later ([3.6](./add-an-app#ci-keys)). Log out and
+back in afterwards so `ubuntu` can use `docker` without `sudo`.
+
+Keep `~/docker-deploy-server/` on the server. Every later run of
+`server-setup.sh` reinstalls the `deploy.sh` beside it, so that folder must
+always hold the current `deploy.sh`.
 
 Check:
 
 ```bash
-id deployer && ls -l /opt/deploy && sudo cat /home/deployer/.ssh/authorized_keys
+id deployer && ls -l /opt/deploy
 ```
 
-## 3.5 Let the server pull images (GHCR login) {#ghcr-login}
+```bash
+sudo -u deployer /opt/deploy/deploy.sh hello; echo "exit $?"
+```
+
+Expected: `deploy: expected: deploy <app> <tag>` and `exit 2`.
+
+## 2.4 Let the server pull images (GHCR login) {#ghcr-login}
 
 The server pulls private images from `ghcr.io` as `deployer`, with a
 **classic** personal access token that has only the `read:packages` scope.
@@ -143,7 +131,7 @@ When the token expires, every deploy on the server fails at `docker pull`.
 Renew it before then and run the login again.
 :::
 
-## 3.6 Firewall {#firewall}
+## 2.5 Firewall {#firewall}
 
 With host networking, the app ports are exposed exactly like a process
 started by pm2 or `node`. Only Nginx should reach them:
@@ -154,10 +142,10 @@ sudo ufw status verbose
 
 There must be no `ALLOW` for your app ports. Check the cloud firewall too.
 
-## 3.7 Pin the server's host key and test the key {#pin-host-key}
+## 2.6 Pin the server's host key {#pin-host-key}
 
 On your laptop, get the server's public host key line. This becomes
-`DEPLOY_KNOWN_HOSTS` in GitHub:
+`DEPLOY_KNOWN_HOSTS` in GitHub, for every app on this server:
 
 ```bash
 ssh-keyscan -p <ssh-port> -t ed25519 <server-host>
@@ -175,25 +163,16 @@ ssh-keyscan -p <ssh-port> -t ed25519 <server-host> 2>/dev/null | ssh-keygen -lf 
 ssh -p <ssh-port> ubuntu@<server-host> ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub
 ```
 
-Then confirm the CI key can only run `deploy.sh`:
-
-```bash
-ssh -i ~/deploy-keys/deploy_staging -p <ssh-port> -o IdentitiesOnly=yes deployer@<server-host> hello; echo "exit $?"
-```
-
-Expected: `deploy: expected: deploy <app> <tag>` and `exit 2`.
-
 ## ✅ Checkpoint {#checkpoint}
 
 On the server:
 
 - `id deployer` lists the `docker` group.
 - `ls -l /opt/deploy` shows `deploy.sh`, `apps/`, `locks/`, `logs/`.
-- `sudo cat /home/deployer/.ssh/authorized_keys` has one `restrict,command="/opt/deploy/deploy.sh --env <env>"` line per environment this server hosts.
+- `sudo -u deployer /opt/deploy/deploy.sh hello` prints `deploy: expected: deploy <app> <tag>` and exits 2.
 - `sudo -iu deployer docker login ghcr.io -u <github-user>` succeeded, and the token's expiry date is written down.
 - `sudo ufw status verbose` has no `ALLOW` for the app ports.
 
 From your laptop:
 
 - The host key fingerprints match, and the `ssh-keyscan` line is saved for `DEPLOY_KNOWN_HOSTS`.
-- `ssh -i ~/deploy-keys/deploy_staging ... deployer@<server-host> hello` prints `deploy: expected: deploy <app> <tag>` and exits 2.
