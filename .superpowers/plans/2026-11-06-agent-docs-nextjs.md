@@ -146,7 +146,7 @@ Expected: exactly one line, `differs: deploy-pipeline-guide/deploy-pipeline/inde
 - [ ] **Step 4: Check the totals**
 
 Run: `cat docs/.vitepress/dist/agent/deploy-pipeline-guide/deploy-pipeline/{,*/}*.md | grep -cE '^ *:{3,} step'`
-Expected: `80`. That is 1 (index) + 15 + 20 + 14 + 5 + 3 (shared) + 1 + 4 (Express) + 1 + 12 + 2 + 2 (Next.js).
+Expected: `81`: 80 real markers plus the sample `::: step` line in the index preamble. The 80 are 1 (index) + 15 + 20 + 14 + 5 + 3 (shared) + 1 + 4 (Express) + 1 + 12 + 2 + 2 (Next.js).
 
 - [ ] **Step 5: Commit**
 

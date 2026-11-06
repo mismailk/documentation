@@ -2,13 +2,13 @@
 
 The handoff document for this project. A new session reads this first, then [AGENTS.md](../AGENTS.md). Update it whenever a plan is verified or a decision is made, and commit it with that work.
 
-_Last updated: 2026-11-06, after plan 2 (shared stages + Express) was implemented by opencode and verified; plan 3 is running._
+_Last updated: 2026-11-06, after all three agent-docs plans were implemented by opencode and verified._
 
 ## Where we are
 
 - `main` (tip `304c4d3`) has the filesystem-driven VitePress site, the contribution guide, the getting-started and reference sections, the Deploy Pipeline guide (generic, Express and Next.js) with its three download kits, and the agent workflow (PR #7).
 - Open PR #6, `docs/add-backray-guide`: adds the Backray user guide and the UI kit Storybook. Not merged.
-- `feat/agent-docs-mcp`: makes the Deploy Pipeline guide agent-ready ([spec](specs/2026-11-06-agent-ready-deploy-pipeline-design.md), approved). Plans 1 and 2 of 3 are done and verified; plan 3 is in progress.
+- `feat/agent-docs-mcp`: makes the Deploy Pipeline guide agent-ready ([spec](specs/2026-11-06-agent-ready-deploy-pipeline-design.md), approved). All three plans are done and verified. Not pushed, and no PR yet.
 
 ## Next step
 
@@ -16,7 +16,9 @@ The plan queue runs one plan at a time. opencode implements a plan, and Claude C
 
 1. ~~Plan 1, [mechanism](plans/2026-11-06-agent-docs-mechanism.md)~~: done and verified.
 2. ~~Plan 2, [shared stages + Express](plans/2026-11-06-agent-docs-shared-express.md)~~: done and verified.
-3. Plan 3, [Next.js](plans/2026-11-06-agent-docs-nextjs.md): in progress. Task 3 (four-colon preamble line and AGENTS.md) was added after plan 2.
+3. ~~Plan 3, [Next.js](plans/2026-11-06-agent-docs-nextjs.md)~~: done and verified. Task 3 (four-colon preamble line and AGENTS.md) was added after plan 2.
+
+Next: push `feat/agent-docs-mcp` and open one PR, when the developer asks. After it merges and Pages deploys, the developer pastes the copied agent link into Claude Code in a real Express repo. That is the acceptance test.
 
 All three ship in **one PR**. The developer then tests by pasting the copied agent link into Claude Code in a real Express repo.
 
@@ -41,12 +43,14 @@ Specs go in `.superpowers/specs/`, plans in `.superpowers/plans/` (at most 4 tas
 | 2026-09-27 | [vitepress-filesystem-navigation](plans/2026-09-27-vitepress-filesystem-navigation.md) | merged to `main` | Done (historical, from before this workflow) |
 | 2026-11-06 | [agent-docs-mechanism](plans/2026-11-06-agent-docs-mechanism.md) (1 of 3) | `feat/agent-docs-mcp` | Done, verified (`6081f89`..`a89897d`) |
 | 2026-11-06 | [agent-docs-shared-express](plans/2026-11-06-agent-docs-shared-express.md) (2 of 3) | `feat/agent-docs-mcp` | Done, verified (`a2a09c7`..`af1cdc3`) |
-| 2026-11-06 | [agent-docs-nextjs](plans/2026-11-06-agent-docs-nextjs.md) (3 of 3) | `feat/agent-docs-mcp` | Approved, in progress |
+| 2026-11-06 | [agent-docs-nextjs](plans/2026-11-06-agent-docs-nextjs.md) (3 of 3) | `feat/agent-docs-mcp` | Done, verified (`4ef0c6a`..`5b02a17`) |
 
 ## Expected numbers
 
 - `npm test`: 37 tests, all passing.
-- `npm run docs:build`: passes with no empty-sidebar warning.
+- `npm run docs:build`: passes with no empty-sidebar warning, and writes 20 agent pages to `dist/agent/`.
+- Guide markers: 80 `step` markers across 12 pages, and the guide-wide check covers all 20 pages.
+- `compare-doc-html` against `main`: only `deploy-pipeline-guide/deploy-pipeline/index.html` differs (the button).
 
 ## Decisions (and why)
 
