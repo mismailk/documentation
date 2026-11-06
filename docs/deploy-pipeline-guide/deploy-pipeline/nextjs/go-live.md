@@ -28,16 +28,20 @@ At [Check it](../go-live#check-it), also check these.
 
 The startup log shows the server listening on the conf's `PORT`, not 3000:
 
+::: step level=ask where=server verify="listening on the conf's PORT, not 3000"
 ```bash
 docker logs --tail 100 <app>-staging
 ```
+:::
 
 If the app has public values, one of the staging values is baked in (use
 your own value):
 
+::: step level=ask where=server verify="lists at least one file"
 ```bash
 docker exec <app>-staging grep -rl 'staging-api.example.com' /app/.next
 ```
+:::
 
 Then, in a browser, through Nginx and the app's public URL:
 

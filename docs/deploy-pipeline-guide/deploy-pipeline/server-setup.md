@@ -36,13 +36,17 @@ only adds new keys.
 
 Each of these should print nothing (otherwise see the note below):
 
+::: step level=ask where=server verify="prints nothing"
 ```bash
 snap list docker 2>/dev/null
 ```
+:::
 
+::: step level=ask where=server verify="prints nothing"
 ```bash
 dpkg -l | grep -E '^ii +docker\.io'
 ```
+:::
 
 ::: warning
 The script refuses to replace a snap or `docker.io` Docker. Migrate it by
@@ -52,15 +56,19 @@ there.
 
 This must succeed (a broken unrelated apt repository stops the install):
 
+::: step level=ask where=server verify="succeeds with no errors"
 ```bash
 sudo apt-get update
 ```
+:::
 
 These must allow `deployer` to log in with a key:
 
+::: step level=ask where=server verify="usepam yes; deployer allowed if allowusers/allowgroups is set"
 ```bash
 sudo sshd -T | grep -Ei '^(allowusers|allowgroups|usepam) '
 ```
+:::
 
 If you see `allowusers`/`allowgroups`, add `deployer` there and reload sshd.
 `usepam` must be `yes`.
@@ -70,23 +78,31 @@ If you see `allowusers`/`allowgroups`, add `deployer` there and reload sshd.
 From the unzipped `deploy-pipeline-kit/` folder on your laptop (see
 [Download the kit](./#download-the-kit)):
 
+::: step level=ask where=server
 ```bash
 ssh -p <ssh-port> ubuntu@<server-host> mkdir -p docker-deploy-server
 ```
+:::
 
+::: step level=ask where=server
 ```bash
 scp -P <ssh-port> server/*.sh server/app.conf.template ubuntu@<server-host>:~/docker-deploy-server/
 ```
+:::
 
 On the server:
 
+::: step level=ask where=server
 ```bash
 cd ~/docker-deploy-server && chmod +x *.sh
 ```
+:::
 
+::: step level=ask where=server
 ```bash
 sudo ./server-setup.sh
 ```
+:::
 
 Options: `--skip-docker` (keep an existing `docker-ce`), `--skip-swap`.
 CI keys are added per app later ([3.6](./add-an-app#ci-keys)). Log out and
@@ -98,13 +114,17 @@ always hold the current `deploy.sh`.
 
 Check:
 
+::: step level=ask where=server verify="deployer is in the docker group; deploy.sh, apps/, locks/, logs/ exist"
 ```bash
 id deployer && ls -l /opt/deploy
 ```
+:::
 
+::: step level=ask where=server verify="prints deploy: expected: deploy <app> <tag> and exit 2"
 ```bash
 sudo -u deployer /opt/deploy/deploy.sh hello; echo "exit $?"
 ```
+:::
 
 Expected: `deploy: expected: deploy <app> <tag>` and `exit 2`.
 
@@ -120,9 +140,15 @@ The account must have read access to the app repositories.
 2. **Write down the expiry date.**
 3. On the server, paste the token at the password prompt:
 
+::: agent
+The token is a secret. Never ask the developer to paste it into the chat. They run the login themselves and type the token at the password prompt.
+:::
+
+::: step level=never where=server verify="login succeeded"
 ```bash
 sudo -iu deployer docker login ghcr.io -u <github-user>
 ```
+:::
 
 One login serves every app on the server.
 
@@ -136,9 +162,11 @@ Renew it before then and run the login again.
 With host networking, the app ports are exposed exactly like a process
 started by pm2 or `node`. Only Nginx should reach them:
 
+::: step level=ask where=server verify="no ALLOW for the app ports"
 ```bash
 sudo ufw status verbose
 ```
+:::
 
 There must be no `ALLOW` for your app ports. Check the cloud firewall too.
 
@@ -147,21 +175,27 @@ There must be no `ALLOW` for your app ports. Check the cloud firewall too.
 On your laptop, get the server's public host key line. This becomes
 `DEPLOY_KNOWN_HOSTS` in GitHub, for every app on this server:
 
+::: step level=ask where=laptop
 ```bash
 ssh-keyscan -p <ssh-port> -t ed25519 <server-host>
 ```
+:::
 
 Keep the line exactly as printed. On a non-22 port it starts with
 `[<server-host>]:<ssh-port>`. Verify it against the server before trusting
 it. These two fingerprints must match:
 
+::: step level=ask where=laptop verify="fingerprint matches the server's own"
 ```bash
 ssh-keyscan -p <ssh-port> -t ed25519 <server-host> 2>/dev/null | ssh-keygen -lf -
 ```
+:::
 
+::: step level=ask where=server verify="fingerprint matches the ssh-keyscan one"
 ```bash
 ssh -p <ssh-port> ubuntu@<server-host> ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub
 ```
+:::
 
 ## ✅ Checkpoint {#checkpoint}
 

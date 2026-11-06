@@ -24,9 +24,11 @@ The templates for your app repo are in this zip:
 
 **<a :href="withBase('/downloads/express-deploy-kit.zip')" download>⬇ express-deploy-kit.zip</a>**
 
+::: step level=run where=laptop
 ```bash
 unzip express-deploy-kit.zip
 ```
+:::
 
 ```text
 express-deploy-kit/
