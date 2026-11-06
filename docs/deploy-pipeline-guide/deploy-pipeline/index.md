@@ -35,6 +35,8 @@ This is the agent version of the Deploy Pipeline guide. You are helping a develo
 
 Command blocks outside a step marker are reference material. Do not run them.
 
+A marker can also use four colons (`:::: step …` closed by `::::`) when it wraps a larger block. It means the same thing. The inline commands in ✅ Checkpoint lists aren't wrapped: run each one at the level of the step it checks.
+
 | `level` | What you do |
 |---|---|
 | `run` | Run it at once, without asking. These are local: the app repo and the developer's machine. |

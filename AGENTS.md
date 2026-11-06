@@ -11,7 +11,7 @@ VitePress 1.6 docs site where the `docs/` filesystem is the single source of tru
 - `npm run docs:dev` / `npm run docs:build` — regenerate the sidebar, then start the dev server / build to `docs/.vitepress/dist`. Use these, **never** raw `vitepress` commands.
 - `npm run generate` — regenerate the sidebar only (run after any docs tree change to check navigation).
 - `npm run docs:preview` — preview the built site (no generate step).
-- `npm test` — Node built-in test runner over `test/*.test.mjs` (12 tests). Run it after changing anything under `scripts/` or `docs/.vitepress/`.
+- `npm test` — Node built-in test runner over `test/*.test.mjs` (37 tests). Run it after changing anything under `scripts/` or `docs/.vitepress/`.
 - CI (`.github/workflows/deploy.yml`) deploys to GitHub Pages on push to `main`: Node 22, `npm ci`, `npm run docs:build`, `VITEPRESS_BASE` sets the base path.
 
 ## Contribution workflow
@@ -60,5 +60,6 @@ Specs and plans live in `.superpowers/`, never under `docs/`: everything under `
 - **Routes are extensionless**: `docs/guides/deploy.md` → `/guides/deploy`; `docs/guides/index.md` → `/guides/` (trailing slash). Link between pages with extensionless routes.
 - **Malformed frontmatter YAML degrades gracefully** (title/order become `undefined`, no crash) — tests pin this behavior; don't "fix" it.
 - **Tests import helpers from `docs/.vitepress/config.mjs`** (`normalizeBase`, `loadSidebar`) as well as the script — keep those named exports when refactoring the config.
+- **Agent markers (Deploy Pipeline guide).** `::: step level=<run|ask|never> where=<laptop|server|github> verify="…"` wraps each runnable command block, and `::: agent` holds agent-only text. Both render nothing on the site. `npm run docs:build` writes agent copies to `dist/agent/<path>.md`. Never put a `::: step` inside `::: v-pre`: wrap the v-pre block from outside with `:::: step` … `::::` instead. `test/guide-markers.test.mjs` fails on any unmarked `bash`/`sh` block in the guide; file excerpts go in its `REFERENCE_BLOCKS`. To prove the human pages didn't change, build `main` in a temporary worktree and run `node scripts/compare-doc-html.mjs <main dist> <branch dist>`. Only the guide's `index.html` may differ (the copy-link button).
 - README and CI require **Node 22** even though `package.json` `engines` says `>=18`.
 - `.superpowers/` holds the specs and plans of the agent workflow (above) — not part of the site. The 2026-09-27 files there are historical; don't act on them.
