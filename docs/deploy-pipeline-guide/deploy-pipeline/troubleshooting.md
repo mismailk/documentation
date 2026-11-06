@@ -43,19 +43,25 @@ app are in your app's guide.
 After a failed verify, the failed container stays in place so you can look
 at it:
 
+::: step level=ask where=server
 ```bash
 docker logs --tail 200 <app>-staging
 ```
+:::
 
+::: step level=ask where=server
 ```bash
 docker inspect -f '{{.State.Status}} restarts={{.RestartCount}} oom={{.State.OOMKilled}} exit={{.State.ExitCode}}' <app>-staging
 ```
+:::
 
 To look inside the image without starting the app:
 
+::: step level=ask where=server
 ```bash
 docker run --rm --entrypoint sh <IMAGE>:staging-<sha7> -c 'ls -la /app'
 ```
+:::
 
 Recover by fixing the cause and deploying again, or by rolling back to the
 last good tag ([5. Everyday Use](./everyday-use#rollback)).

@@ -10,6 +10,10 @@ checks for your kind of app; do those at the points marked below.
 
 ## 4.1 Push with deploys disabled {#push-disabled}
 
+::: agent
+Committing the pipeline files is `run`. Pushing them, checking or changing `DEPLOY_ENABLED`, and reading the Actions run are `ask`/`github`. Use `gh run watch` / `gh variable` once the developer approves.
+:::
+
 Check that `DEPLOY_ENABLED` is `false` in the `staging` environment. Commit
 the pipeline files your app's guide lists (at least `Dockerfile`,
 `.dockerignore` and `.github/workflows/deploy.yml`) and push them to your
@@ -27,29 +31,37 @@ In the GitHub Actions run:
 
 On the server, check there is room for the image:
 
+::: step level=ask where=server verify="enough free space for the image"
 ```bash
 df -h /
 ```
+:::
 
 If an old process serves this app on the same port today (pm2, a systemd
 unit, a plain `node`), stop it. Stop, don't delete: you keep it until the
 container is proven. With pm2:
 
+::: step level=ask where=server
 ```bash
 pm2 stop <old-process-name>
 ```
+:::
 
 With a systemd unit:
 
+::: step level=ask where=server
 ```bash
 sudo systemctl stop <unit>
 ```
+:::
 
 Deploy the tag from 4.1:
 
+::: step level=ask where=server verify="exit 0"
 ```bash
 sudo -u deployer /opt/deploy/deploy.sh deploy <app> staging-<sha7>; echo "exit $?"
 ```
+:::
 
 `exit 0` with `deploy: <app> staging staging-<sha7> ok` means the container
 answered HTTP on its port and was still running with zero restarts 10 s
@@ -60,6 +72,7 @@ later. Anything else: look the message up in
 
 `deploy.sh` only proves the server answers. Check the app itself.
 
+:::: step level=ask where=server verify="the container runs the new tag"
 ::: v-pre
 The container is running the new tag:
 
@@ -67,12 +80,15 @@ The container is running the new tag:
 docker ps --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}'
 ```
 :::
+::::
 
 The startup log is clean, and the app listens on the conf's `PORT`:
 
+::: step level=ask where=server verify="clean startup log, listening on the conf's PORT"
 ```bash
 docker logs --tail 100 <app>-staging
 ```
+:::
 
 Then use the app through Nginx and its public URL, and run the extra checks
 from your app's guide.
@@ -81,13 +97,17 @@ from your app's guide.
 
 Save the failed container's logs first; removing it deletes them:
 
+::: step level=ask where=server
 ```bash
 docker logs <app>-staging > ~/<app>-staging-failed.log 2>&1
 ```
+:::
 
+::: step level=ask where=server
 ```bash
 docker rm -f <app>-staging && pm2 start <old-process-name>
 ```
+:::
 
 With a systemd unit: `docker rm -f <app>-staging && sudo systemctl start <unit>`.
 
@@ -100,13 +120,17 @@ the new tag.
 Delete the old process and save pm2's process list, so a reboot doesn't
 start it again and take the port:
 
+::: step level=ask where=server
 ```bash
 pm2 delete <old-process-name> && pm2 save
 ```
+:::
 
+::: step level=ask where=server verify="the old process is gone"
 ```bash
 pm2 list
 ```
+:::
 
 The app is no longer in the list. (For a systemd unit:
 `sudo systemctl disable --now <unit>`.)
@@ -118,9 +142,11 @@ Then on GitHub, in the `staging` environment, set `DEPLOY_ENABLED` to
 `true`. From now on every push to your staging branch builds and deploys.
 Prove it with a small commit (an empty one works):
 
+::: step level=ask where=github verify="both jobs go green"
 ```bash
 git commit --allow-empty -m "chore: first CI deploy" && git push
 ```
+:::
 
 Both jobs go green, and `docker ps` on the server shows the new
 `staging-<sha7>`.
@@ -137,15 +163,19 @@ verified `ssh-keyscan` line) for that server.
    held it back, or a new production server), copy it next to your edited
    `deploy.sh`:
 
+   ::: step level=ask where=server
    ```bash
    scp -P <ssh-port> ~/deploy-keys/<app>_production.pub ubuntu@<server-host>:~/docker-deploy-server/
    ```
+   :::
 
    Then on the server:
 
+   ::: step level=ask where=server
    ```bash
    cd ~/docker-deploy-server && sudo ./server-setup.sh --skip-docker --skip-swap production:<app>_production.pub
    ```
+   :::
 
    Run this next to your edited `deploy.sh`, because the script reinstalls
    the `deploy.sh` beside it ([3.2](./add-an-app#register-app)).
@@ -155,9 +185,11 @@ verified `ssh-keyscan` line) for that server.
    check on the production `.env`, then the conf check. It must end with
    `exit 1` and `deploy: pull failed`:
 
+   ::: step level=ask where=server verify="exit 1 with deploy: pull failed"
    ```bash
    sudo -u deployer /opt/deploy/deploy.sh deploy <app> production-0000000; echo "exit $?"
    ```
+   :::
 
    Add the Nginx site for the production URL, proxying to the production
    conf's `PORT` ([3.5](./add-an-app#conf-check)).

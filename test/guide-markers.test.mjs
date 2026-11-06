@@ -8,7 +8,6 @@ const GUIDE = 'docs/deploy-pipeline-guide/deploy-pipeline'
 
 // Pages not marked yet. Tasks remove entries as they mark pages; plan 3 empties it.
 export const PENDING = new Set([
-  'go-live.md', 'everyday-use.md', 'troubleshooting.md', 'reference.md',
   'express/index.md', 'express/prepare-your-app.md',
   'nextjs/index.md', 'nextjs/prepare-your-app.md', 'nextjs/go-live.md', 'nextjs/everyday-use.md',
 ])
@@ -17,6 +16,22 @@ export const PENDING = new Set([
 export const REFERENCE_BLOCKS = [
   { file: 'add-an-app.md', code: '    backend) ;;' },
   { file: 'add-an-app.md', code: '    backend | <app>) ;;' },
+  {
+    file: 'reference.md',
+    code: [
+      'docker run -d --name <CONTAINER> \\',
+      '  --init \\',
+      '  --network host \\',
+      '  --restart unless-stopped \\',
+      '  --memory <MEMORY> --memory-swap <MEMORY> \\',
+      '  --log-opt max-size=10m --log-opt max-file=3 \\',
+      '  -v <ENV_FILE>:/app/.env:ro \\',
+      '  --label deploy.app=<app> \\',
+      '  --label deploy.env=<env> \\',
+      '  --label deploy.tag=<tag> \\',
+      '  <IMAGE>:<tag>',
+    ].join('\n'),
+  },
 ]
 
 const pages = (dir, base = '') => fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) =>

@@ -44,22 +44,28 @@ Deploys of the same app and environment never overlap: the second waits.
 Every image tag the server still has, or that GHCR still has, can be
 deployed again. List the tags on the server, newest first:
 
+::: step level=ask where=server
 ```bash
 docker images <IMAGE> --format '{{.Tag}}\t{{.CreatedAt}}' | grep '^staging-'
 ```
+:::
 
 A rollback replaces the current container, and its logs go with it. Save
 them first if you need them:
 
+::: step level=ask where=server
 ```bash
 docker logs <app>-staging > ~/<app>-staging-$(date +%F-%H%M).log 2>&1
 ```
+:::
 
 Deploy an older one:
 
+::: step level=ask where=server verify="exit 0"
 ```bash
 sudo -u deployer /opt/deploy/deploy.sh deploy <app> staging-<older-sha7>; echo "exit $?"
 ```
+:::
 
 Or on GitHub: open an older successful run, open its **deploy** job, and
 choose "Re-run this job". That redeploys that run's image as it is. "Re-run
@@ -86,13 +92,17 @@ reads it when the container starts.
    `proxy_pass` to match.
 2. Redeploy the tag that is running. Find it, then deploy it again:
 
+   ::: step level=ask where=server
    ```bash
    docker inspect -f '{{index .Config.Labels "deploy.tag"}}' <app>-staging
    ```
+   :::
 
+   ::: step level=ask where=server verify="exit 0"
    ```bash
    sudo -u deployer /opt/deploy/deploy.sh deploy <app> staging-<sha7>; echo "exit $?"
    ```
+   :::
 
 This replaces the container and runs the same checks as any deploy.
 
