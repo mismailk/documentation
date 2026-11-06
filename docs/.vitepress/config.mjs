@@ -2,7 +2,7 @@ import { defineConfig } from 'vitepress'
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { useAgentContainers } from '../../scripts/agent-docs.mjs'
+import { useAgentContainers, writeAgentDocs } from '../../scripts/agent-docs.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -38,5 +38,13 @@ export default defineConfig({
   themeConfig: {
     search: { provider: 'local' },
     sidebar: loadSidebar(),
+  },
+  buildEnd: (siteConfig) => {
+    const written = writeAgentDocs({
+      srcDir: siteConfig.srcDir,
+      outDir: siteConfig.outDir,
+      base: siteConfig.site.base,
+    })
+    console.log(`[agent-docs] wrote ${written.length} agent pages`)
   },
 })

@@ -1,4 +1,7 @@
 import container from 'markdown-it-container'
+import fs from 'node:fs'
+import path from 'node:path'
+import matter from 'gray-matter'
 
 // Step metadata vocabulary. A typo in either list is a build error, never a
 // silently unmarked step.
@@ -142,4 +145,112 @@ export function useAgentContainers(md) {
       i -= 1
     }
   })
+}
+
+// Join a site base and a target path without doubling or dropping slashes.
+function joinBase(base, target) {
+  return `${base.replace(/\/+$/, '')}/${target.replace(/^\/+/, '')}`
+}
+
+// The website route of an agent page path (without its .md extension).
+function siteUrl(base, pagePath) {
+  let route = pagePath.replace(/\.md$/, '')
+  if (route === 'index') return base
+  if (route.endsWith('/index')) route = route.slice(0, -'index'.length)
+  return joinBase(base, route)
+}
+
+// Rewrite one line of markdown: withBase anchors to plain links, and relative
+// page links either to the matching agent copy (.md) or to the website URL.
+function rewriteLine(line, { relPath, base, scope }) {
+  const dir = path.posix.dirname(relPath)
+
+  let out = line.replace(
+    /<a\s+[^>]*:href="withBase\('([^']+)'\)"[^>]*>([\s\S]*?)<\/a>/g,
+    (_, target, text) => `[${text}](${joinBase(base, target)})`,
+  )
+
+  out = out.replace(/\[([^\]]*)\]\(([^)\s]+)\)/g, (whole, text, target) => {
+    if (/^(?:https?:|mailto:|#)/.test(target)) return whole
+    if (!target.startsWith('./') && !target.startsWith('../')) return whole
+
+    const hashIndex = target.indexOf('#')
+    const targetPath = hashIndex === -1 ? target : target.slice(0, hashIndex)
+    const hash = hashIndex === -1 ? '' : target.slice(hashIndex)
+
+    let pagePath
+    if (targetPath.endsWith('/')) {
+      const resolved = path.posix.normalize(path.posix.join(dir, targetPath))
+      pagePath = resolved === '.' ? 'index.md' : `${resolved}/index.md`
+    } else {
+      const resolved = path.posix.normalize(path.posix.join(dir, targetPath))
+      pagePath = resolved.endsWith('.md') ? resolved : `${resolved}.md`
+    }
+
+    if (pagePath.startsWith(`${scope}/`)) {
+      let relative = path.posix.relative(dir, pagePath)
+      if (!relative.startsWith('.')) relative = `./${relative}`
+      return `[${text}](${relative}${hash})`
+    }
+    return `[${text}](${siteUrl(base, pagePath)}${hash})`
+  })
+
+  return out
+}
+
+// Turn one guide source page into its agent copy: heading from the title,
+// no script/style, agent and v-pre unwrapped, links rewritten for an agent.
+export function toAgentCopy(source, { relPath, base, scope = AGENT_SCOPE }) {
+  const parsed = matter(source)
+  let content = parsed.content
+
+  if (!/^# /m.test(content) && parsed.data.title) {
+    content = `# ${parsed.data.title}\n\n${content}`
+  }
+
+  content = content
+    .replace(/<script\b[\s\S]*?<\/script>\s*/g, '')
+    .replace(/<style\b[\s\S]*?<\/style>\s*/g, '')
+
+  let scan = scanSource(content)
+  const drop = new Set()
+  for (const c of scan.containers) {
+    if (c.name === 'v-pre' || c.name === 'agent') {
+      drop.add(c.start)
+      drop.add(c.end)
+    }
+  }
+  if (drop.size > 0) {
+    content = scan.lines.filter((_, i) => !drop.has(i)).join('\n')
+    scan = scanSource(content)
+  }
+
+  const lines = scan.lines.map((line, i) =>
+    scan.inFence[i] ? line : rewriteLine(line, { relPath, base, scope }),
+  )
+  return lines.join('\n')
+}
+
+function collectMarkdown(dir) {
+  const files = []
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name)
+    if (entry.isDirectory()) files.push(...collectMarkdown(full))
+    else if (entry.isFile() && entry.name.endsWith('.md')) files.push(full)
+  }
+  return files
+}
+
+// Write <outDir>/agent/<relPath> for every .md under <srcDir>/<scope>.
+// Returns the written relPaths, sorted.
+export function writeAgentDocs({ srcDir, outDir, base, scope = AGENT_SCOPE }) {
+  const written = []
+  for (const file of collectMarkdown(path.join(srcDir, scope))) {
+    const relPath = path.relative(srcDir, file).split(path.sep).join('/')
+    const dest = path.join(outDir, 'agent', relPath)
+    fs.mkdirSync(path.dirname(dest), { recursive: true })
+    fs.writeFileSync(dest, toAgentCopy(fs.readFileSync(file, 'utf8'), { relPath, base, scope }))
+    written.push(relPath)
+  }
+  return written.sort()
 }

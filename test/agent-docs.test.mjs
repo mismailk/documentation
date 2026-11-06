@@ -60,3 +60,63 @@ test('findUnmarkedCommandBlocks sees steps nested in v-pre', () => {
   const src = ['::: v-pre', '::: step level=run where=laptop', '```bash', 'grep -rn x .', '```', ':::', ':::'].join('\n')
   assert.deepEqual(findUnmarkedCommandBlocks(src), [])
 })
+
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
+import { toAgentCopy, writeAgentDocs } from '../scripts/agent-docs.mjs'
+
+const rel = 'deploy-pipeline-guide/deploy-pipeline/express/index.md'
+const opts = { relPath: rel, base: '/documentation/' }
+
+test('toAgentCopy turns the frontmatter title into a heading and drops script and style', () => {
+  const out = toAgentCopy('---\ntitle: Express\norder: 0\n---\n<script setup>\nimport { withBase } from "vitepress"\n</script>\n\nBody.\n', opts)
+  assert.match(out, /^# Express\n/)
+  assert.doesNotMatch(out, /script|order:/)
+  assert.match(out, /Body\./)
+})
+
+test('toAgentCopy keeps step markers, unwraps agent and v-pre, keeps tip', () => {
+  const src = '# T\n\n::: agent\nAgent text.\n:::\n\n::: v-pre\n{{X}}\n:::\n\n::: step level=run where=laptop\n```bash\nnpm ci\n```\n:::\n\n::: tip\nHi\n:::\n'
+  const out = toAgentCopy(src, opts)
+  assert.match(out, /Agent text\./)
+  assert.doesNotMatch(out, /::: agent|::: v-pre/)
+  assert.match(out, /::: step level=run where=laptop\n```bash\nnpm ci\n```\n:::/)
+  assert.match(out, /::: tip\nHi\n:::/)
+})
+
+test('toAgentCopy rewrites links to agent copies, downloads and out-of-guide pages', () => {
+  const src = [
+    '# T',
+    '[a](./prepare-your-app#pick-your-values) [b](../) [c](../add-an-app#env-file) [d](../#download-the-kit)',
+    '[e](../../../reference/commands) [f](https://x.y/z) [g](#steps)',
+    `**<a :href="withBase('/downloads/express-deploy-kit.zip')" download>⬇ express-deploy-kit.zip</a>**`,
+    '```bash', 'echo "[not](./a-link)"', '```',
+  ].join('\n')
+  const out = toAgentCopy(src, opts)
+  assert.match(out, /\[a\]\(\.\/prepare-your-app\.md#pick-your-values\)/)
+  assert.match(out, /\[b\]\(\.\.\/index\.md\)/)
+  assert.match(out, /\[c\]\(\.\.\/add-an-app\.md#env-file\)/)
+  assert.match(out, /\[d\]\(\.\.\/index\.md#download-the-kit\)/)
+  assert.match(out, /\[e\]\(\/documentation\/reference\/commands\)/)
+  assert.match(out, /\[f\]\(https:\/\/x\.y\/z\) \[g\]\(#steps\)/)
+  assert.match(out, /\*\*\[⬇ express-deploy-kit\.zip\]\(\/documentation\/downloads\/express-deploy-kit\.zip\)\*\*/)
+  assert.match(out, /echo "\[not\]\(\.\/a-link\)"/)
+})
+
+test('writeAgentDocs mirrors the scoped tree under agent/ and skips other sections', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'agent-docs-'))
+  const src = path.join(root, 'docs'), out = path.join(root, 'dist')
+  for (const [f, c] of Object.entries({
+    'deploy-pipeline-guide/deploy-pipeline/index.md': '# Index\n',
+    'deploy-pipeline-guide/deploy-pipeline/express/index.md': '# Express\n',
+    'reference/commands.md': '# Commands\n',
+  })) { fs.mkdirSync(path.dirname(path.join(src, f)), { recursive: true }); fs.writeFileSync(path.join(src, f), c) }
+  assert.deepEqual(writeAgentDocs({ srcDir: src, outDir: out, base: '/' }), [
+    'deploy-pipeline-guide/deploy-pipeline/express/index.md',
+    'deploy-pipeline-guide/deploy-pipeline/index.md',
+  ])
+  assert.ok(fs.existsSync(path.join(out, 'agent/deploy-pipeline-guide/deploy-pipeline/express/index.md')))
+  assert.ok(!fs.existsSync(path.join(out, 'agent/reference')))
+  fs.rmSync(root, { recursive: true, force: true })
+})
