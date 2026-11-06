@@ -31,19 +31,25 @@ Host Nginx ──proxy──► 127.0.0.1:<PORT>  (container uses host networkin
   workflow; `deploy.sh` only accepts tags starting with `staging-` or
   `production-`. Other branches don't trigger the workflow (and if one ever
   did, the tag step would fail instead of guessing an environment).
-- **The image is built once, in CI.** The server never builds anything and
-  never runs `git pull`. Rollback is "deploy an older tag".
-- **Secrets never pass through CI.** Your app's `.env` lives on the server
-  and is mounted read-only into the container at `/app/.env`. The only secret
-  in GitHub is the SSH key CI uses to trigger the deploy.
+- **The image is built in CI.** The server never builds anything and never
+  runs `git pull`. Rollback is "deploy an older tag".
+- **Server values never pass through CI.** Your app's `.env` lives on the
+  server and is mounted read-only into the container at `/app/.env`. The
+  only secret in GitHub is the SSH key CI uses to trigger the deploy.
 - **Each CI key can only do one thing:** run `deploy <app> <tag>` for its own
   environment. It gets no shell, and the staging key can't deploy to
-  production.
+  production. Each app repo has its own keys.
+- **One server, many apps.** Every app on a server goes through the same
+  `deploy.sh`. Its whitelist names the apps the server accepts, and each app
+  and environment has its own conf file, port, container and `.env`.
 - **A deploy that doesn't come up turns CI red.** After starting the new
   container, `deploy.sh` waits for any HTTP answer on the app's port (up to
   30 s), waits 10 s more, and then requires the container to be running with
   zero restarts. There is a 1–2 s gap while the old container stops and the
   new one starts. There's no automatic rollback.
+
+Your app's guide adds what is specific to your kind of app: how the image is
+built and what goes in its `.env`.
 
 ## ✅ Checkpoint {#checkpoint}
 
