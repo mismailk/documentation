@@ -71,30 +71,42 @@ Two template defaults to review:
 If you have no `build` script yet, add one, and declare any package you
 import but haven't listed ([checklist](./app-readiness) items 3 and 6):
 
+::: step level=run where=laptop
 ```bash
 npm pkg set scripts.build=tsc
 ```
+:::
 
 ## Test the image locally before pushing {#test-image-locally}
 
+::: agent
+Create `.env.local-test` yourself, with throwaway values that point at local services. Never copy values from a real `.env`. The `docker run` blocks the terminal, so run it in the background and stop it after the curl check.
+:::
+
 Build it:
 
+::: step level=run where=laptop verify="the image builds"
 ```bash
 docker build -t <app>:local .
 ```
+:::
 
 Run it the way the server will. Use a throwaway `.env` that points at local
 services, and a free port. Don't use your real secrets:
 
+::: step level=run where=laptop verify="the app starts; the curl check below answers"
 ```bash
 docker run --rm --init --network host -v "$PWD/.env.local-test:/app/.env:ro" <app>:local
 ```
+:::
 
 In another terminal, any HTTP answer means the app is up:
 
+::: step level=run where=laptop verify="any HTTP code, not 000"
 ```bash
 curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:<PORT>/
 ```
+:::
 
 ::: v-pre
 An `ENOENT` crash means a runtime file is missing. Add it to

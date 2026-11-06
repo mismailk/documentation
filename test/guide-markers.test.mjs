@@ -8,7 +8,6 @@ const GUIDE = 'docs/deploy-pipeline-guide/deploy-pipeline'
 
 // Pages not marked yet. Tasks remove entries as they mark pages; plan 3 empties it.
 export const PENDING = new Set([
-  'express/index.md', 'express/prepare-your-app.md',
   'nextjs/index.md', 'nextjs/prepare-your-app.md', 'nextjs/go-live.md', 'nextjs/everyday-use.md',
 ])
 
