@@ -8,13 +8,16 @@ const GUIDE = 'docs/deploy-pipeline-guide/deploy-pipeline'
 
 // Pages not marked yet. Tasks remove entries as they mark pages; plan 3 empties it.
 export const PENDING = new Set([
-  'server-setup.md', 'add-an-app.md', 'go-live.md', 'everyday-use.md', 'troubleshooting.md', 'reference.md',
+  'go-live.md', 'everyday-use.md', 'troubleshooting.md', 'reference.md',
   'express/index.md', 'express/prepare-your-app.md',
   'nextjs/index.md', 'nextjs/prepare-your-app.md', 'nextjs/go-live.md', 'nextjs/everyday-use.md',
 ])
 
 // Bash blocks that are reference text, not commands to run. Match on the exact block body.
-export const REFERENCE_BLOCKS = []
+export const REFERENCE_BLOCKS = [
+  { file: 'add-an-app.md', code: '    backend) ;;' },
+  { file: 'add-an-app.md', code: '    backend | <app>) ;;' },
+]
 
 const pages = (dir, base = '') => fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) =>
   e.isDirectory() ? pages(path.join(dir, e.name), `${base}${e.name}/`) : e.name.endsWith('.md') ? [`${base}${e.name}`] : [])
