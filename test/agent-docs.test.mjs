@@ -33,3 +33,30 @@ test('an agent container renders nothing', () => {
 test('a step container with bad attributes fails the render', () => {
   assert.throws(() => md().render(`::: step level=maybe where=laptop\n${fence}:::\n`), /level/)
 })
+
+import { findUnmarkedCommandBlocks } from '../scripts/agent-docs.mjs'
+
+test('findUnmarkedCommandBlocks reports bash blocks outside steps only', () => {
+  const src = [
+    '# T',                                  // 1
+    '```bash', 'npm ci', '```',             // 2-4  unmarked
+    '::: step level=run where=laptop',      // 5
+    '```bash', 'npm test', '```',           // 6-8  marked
+    ':::',                                  // 9
+    '::: tip',                              // 10
+    '```sh', 'ls', '```',                   // 11-13 unmarked (tip is not a step)
+    ':::',                                  // 14
+    '```text', 'tree', '```',               // 15-17 not a command language
+  ].join('\n')
+  assert.deepEqual(findUnmarkedCommandBlocks(src), [{ line: 2, code: 'npm ci' }, { line: 11, code: 'ls' }])
+})
+
+test('findUnmarkedCommandBlocks ignores ::: inside code fences', () => {
+  const src = ['::: step level=run where=laptop', '````md', ':::', '````', '```bash', 'echo hi', '```', ':::'].join('\n')
+  assert.deepEqual(findUnmarkedCommandBlocks(src), [])
+})
+
+test('findUnmarkedCommandBlocks sees steps nested in v-pre', () => {
+  const src = ['::: v-pre', '::: step level=run where=laptop', '```bash', 'grep -rn x .', '```', ':::', ':::'].join('\n')
+  assert.deepEqual(findUnmarkedCommandBlocks(src), [])
+})

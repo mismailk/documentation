@@ -41,6 +41,74 @@ export function parseStepAttrs(info) {
   return result
 }
 
+// Scan a markdown source line by line. Inside a fenced block (` ``` ` or
+// `~~~`) container syntax is ignored; outside, `::: name` opens a container
+// and `:::` closes the innermost one. Shared by findUnmarkedCommandBlocks and
+// the agent-copy transformer.
+function scanSource(source) {
+  const lines = source.split('\n')
+  const fences = []
+  const containers = []
+  const inFence = new Array(lines.length).fill(false)
+  const stack = []
+  let fence = null
+
+  for (let i = 0; i < lines.length; i += 1) {
+    const line = lines[i]
+
+    if (fence) {
+      inFence[i] = true
+      const close = new RegExp(`^${fence.char}{${fence.length},}\\s*$`)
+      if (close.test(line)) {
+        fences.push({
+          start: fence.start,
+          end: i,
+          lang: fence.lang,
+          inStep: fence.inStep,
+          code: lines.slice(fence.start + 1, i).join('\n'),
+        })
+        fence = null
+      }
+      continue
+    }
+
+    const fenceOpen = line.match(/^(`{3,}|~{3,})\s*([^\s`]*)/)
+    if (fenceOpen) {
+      inFence[i] = true
+      fence = {
+        char: fenceOpen[1][0],
+        length: fenceOpen[1].length,
+        start: i,
+        lang: fenceOpen[2],
+        inStep: stack.some((c) => c.name === 'step'),
+      }
+      continue
+    }
+
+    const containerOpen = line.match(/^:::+\s*(\S+)/)
+    if (containerOpen) {
+      stack.push({ name: containerOpen[1], start: i })
+      continue
+    }
+
+    if (/^:::+\s*$/.test(line)) {
+      const closed = stack.pop()
+      if (closed) containers.push({ name: closed.name, start: closed.start, end: i })
+    }
+  }
+
+  return { lines, fences, containers, inFence }
+}
+
+// Every fenced bash/sh/shell block that is not inside a `::: step` container.
+// `line` is the 1-based line of the opening fence; `code` is the body.
+export function findUnmarkedCommandBlocks(source) {
+  const { fences } = scanSource(source)
+  return fences
+    .filter((f) => !f.inStep && ['bash', 'sh', 'shell'].includes(f.lang))
+    .map((f) => ({ line: f.start + 1, code: f.code }))
+}
+
 // Register the two invisible containers on a markdown-it instance:
 // - `::: step …` renders its content and nothing else (validating attributes).
 // - `::: agent` renders nothing at all; its tokens are dropped.
