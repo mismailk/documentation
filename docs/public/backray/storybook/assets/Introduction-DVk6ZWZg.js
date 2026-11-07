@@ -1,4 +1,4 @@
-import{n as e}from"./rolldown-runtime-DkW27tQK.js";import{A as t,a as n,k as r,o as i}from"./blocks-SBStDxuN.js";import{t as a}from"./jsx-runtime-DeHZSEgm.js";function o(e){let r={code:`code`,h1:`h1`,h2:`h2`,p:`p`,pre:`pre`,strong:`strong`,...t(),...e.components};return(0,c.jsxs)(c.Fragment,{children:[(0,c.jsx)(n,{title:`Introduction`}),`
+import{n as e}from"./rolldown-runtime-DkW27tQK.js";import{A as t,a as n,k as r,o as i}from"./blocks-CzNlec3B.js";import{t as a}from"./jsx-runtime-DeHZSEgm.js";function o(e){let r={code:`code`,h1:`h1`,h2:`h2`,p:`p`,pre:`pre`,strong:`strong`,...t(),...e.components};return(0,c.jsxs)(c.Fragment,{children:[(0,c.jsx)(n,{title:`Introduction`}),`
 `,(0,c.jsx)(r.h1,{id:`backrayui`,children:`@backray/ui`}),`
 `,(0,c.jsx)(r.p,{children:`The design system for the host dashboard and its extensions.`}),`
 `,(0,c.jsx)(r.h2,{id:`install`,children:`Install`}),`

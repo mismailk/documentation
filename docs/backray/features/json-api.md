@@ -13,7 +13,7 @@ Each route has a name. [Route overrides](routes.md) and [middleware](middleware.
 
 | Name | Method and path | Answers |
 | --- | --- | --- |
-| `resources.list` | `GET /api/resources` | Every resource, its fields and labels, and the problems found |
+| `resources.list` | `GET /api/resources` | Every resource, its fields and labels, the sidebar `groups` (`{ key, label, order }`, see [Sidebar groups](sidebar-groups.md)), and the problems found |
 | `resource.get` | `GET /api/resources/:key` | One resource |
 | `records.list` | `GET /api/resources/:key/records` | A page of records |
 | `records.get` | `GET /api/resources/:key/records/:id` | One record |
@@ -23,6 +23,8 @@ Each route has a name. [Route overrides](routes.md) and [middleware](middleware.
 | `records.delete` | `DELETE /api/resources/:key/records/:id` | The deleted id, as `{ "ids": [id] }` |
 | `records.deleteMany` | `DELETE /api/resources/:key/records` | The deleted ids. Body: `{ "data": { "ids": [...] } }`; all or none |
 | `records.facets` | `GET /api/resources/:key/facets` | Counts per value for filterable fields |
+
+Two more paths serve [extensions](extensions.md) and are not named routes: `GET /api/manifest` answers the list of built extensions (never cached), and `GET /extensions/<file>` serves their bundles and stylesheets (cached for a year). Backray's [`middleware`](middleware.md) does not wrap them; Express middleware you mount before `backray()`, such as a login check, still does.
 
 ## Answers
 
@@ -51,7 +53,7 @@ An error has `errors` instead of `data`, with a `code`:
 | 503 | `unavailable` | The resources couldn't be loaded |
 | 500 | `internal` | Anything else; the detail goes to the server's log |
 
-Records come with `id` as a string, dates as ISO strings in UTC (`date` fields as `YYYY-MM-DD`), and references as an id, or as the record when extended.
+Records come with `id` as a string (also for a Number `_id`), dates as ISO strings in UTC (`date` fields as `YYYY-MM-DD`), and references as an id, or as the record when extended. By default a list extends the references in its table columns, and a single record every fixed reference, including those inside objects, object-list rows, trees and maps.
 
 ## Listing records
 
@@ -83,6 +85,17 @@ A parameter the route doesn't know, a value that doesn't convert, or a parameter
 | `tags` | `f.<field>=x,y` |
 
 Only fields marked `filterable` take filters, and only fields marked `sortable` can be sorted (see [Model options](model-options.md)). Your own field types supply their format through [`filters`](middleware.md#filter-your-own-field-types-filters).
+
+Fields inside an object or an object list can be `filterable` too. Their filters use the dotted path: `f.address.city=Cairo`, `f.contacts.role=owner`. Set the flag with the same dotted path in an override:
+
+```js
+fields: {
+  "address.city": { filterable: true },   // one object's child
+  "contacts.role": { filterable: true },  // a child of every object-list row
+}
+```
+
+Filters on the same object list must match one row: `f.contacts.role=owner&f.contacts.city=Cairo` returns a record only when a single contact is both an owner and in Cairo. Filters on different containers are independent. Nested filters cannot be facets: `GET /facets` takes top-level filterable fields only.
 
 For example:
 

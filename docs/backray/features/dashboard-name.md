@@ -5,7 +5,7 @@ order: 17
 
 # Dashboard name
 
-The dashboard is called "Backray" until you name it. The name shows in the sidebar, in the header on a phone, and in the browser tab:
+The dashboard is called "Backray" until you name it. The name shows in the sidebar, in the header and at the top of the menu on a phone, and in the browser tab:
 
 ```js
 app.use(backray({

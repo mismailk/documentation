@@ -32,9 +32,16 @@ mongooseAdapter({
 | `key` | The resource's key and URL. Default: the collection name in kebab case (`order_items` → `order-items`) |
 | `titleField` | The field that names a record. Default: the first of `title`, `name`, `label`, `key`, `fullName`, `username`, `email`, else `id` |
 | `defaultSort` | The list's starting sort. Default: newest first (`createdAt` with timestamps, else `id`) |
+| `group` | The sidebar group the resource sits in (lowercase letters, digits and dashes); `null` removes it (see [Sidebar groups](sidebar-groups.md)) |
+| `label` | The resource's names as message keys: `title`, `singular`, `plural`, and `nav` for the short name inside its sidebar group; `null` removes one (see [Labels and translations](labels-and-translations.md)) |
+| `idInput` | `"text"` or `"number"`: Create asks for the record's id; `null` removes it (see [Record ids](record-ids.md)) |
+| `parentField` | The field that points at a record's parent, for models that reference themselves (see [Self-references](self-references.md)) |
+| `search` | `"regex"` (default, parts of words) or `"text"` (a text index: whole words and stems; see [Indexes and search](indexes-and-search.md)) |
+| `timestamps` | Which top-level date fields Backray stamps, as `{ createdAt, updatedAt }` field names, or `false` for none |
+| `query` | What a client may ask for over HTTP: `{ select, extend, maxDepth }`, or `false` for the defaults only (see [The JSON API](json-api.md)) |
 | `hidden` | Fields never sent to the dashboard (see [Secret and hidden fields](secret-fields.md)) |
 | `shown` | Fields a secret-looking name would hide, served anyway. A path also serves every secret field under it (`auth` serves `auth.token`) |
-| `fields` | Per field, by dotted path: `type`, `config`, `label` (a message key), `required`, `unique`, `immutable`, `readOnly`, `showInTable`, `showInForm`, `filterable`, `sortable`, `searchable`. A nested field (`supplier.name`) takes only `type`, `config`, `label`, `required` and `readOnly`; it cannot take `unique` or `immutable` either |
+| `fields` | Per field, by dotted path: `type`, `config`, `label` (a message key), `required`, `unique`, `immutable`, `readOnly`, `showInTable`, `showInForm`, `filterable`, `sortable`, `searchable`. A nested field (`supplier.name`) takes only `type`, `config`, `label`, `required`, `readOnly` and `filterable`; it cannot take `unique` or `immutable` either |
 
 ## How an override merges
 

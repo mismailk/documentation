@@ -40,7 +40,7 @@ To check that the files work before you touch your project:
 npm run smoke:pack
 ```
 
-It installs the five files into a new, empty Express project under Node.js 20.19. It then starts that project twice, once as an ES module and once as CommonJS, and checks that the API, the dashboard page and its scripts answer. It ends with `smoke:pack ok (esm, cjs)`. It needs internet access to download Express, Mongoose and Node.js 20.19.
+It installs the five files into a new, empty Express project under Node.js 20.19. It then starts that project twice, once as an ES module and once as CommonJS, and checks that the API, the dashboard page and its scripts answer. Then it builds a small extension with the installed `host-extensions` command and checks the bundle, stylesheet and manifest it writes. It ends with `smoke:pack ok (esm, cjs, host-extensions)`. It needs internet access to download Express, Mongoose and Node.js 20.19.
 
 To check a project shaped like a CommonJS TypeScript app, run:
 

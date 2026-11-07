@@ -20,6 +20,7 @@ Most projects only need the adapter's options.
 - [Field types](field-types.md): what each schema path becomes, and how to change it.
 - [Trees](trees.md): subdocument arrays that hold themselves, such as menus.
 - [Self-references](self-references.md): models with a parent of their own kind, such as categories.
+- [Record ids](record-ids.md): ids typed in on Create, and references between models with different id types.
 - [Maps and Mixed](maps-and-mixed.md): what `Map` and `Mixed` paths become.
 - [Labels and translations](labels-and-translations.md): the names shown, in every language.
 
@@ -40,6 +41,8 @@ Most projects only need the adapter's options.
 ## The dashboard and the server
 
 - [Dashboard name](dashboard-name.md): the name in the sidebar and the browser tab.
+- [Sidebar groups](sidebar-groups.md): collapsible groups of related resources, set per resource.
+- [Extensions](extensions.md): add a widget or a field type without rebuilding the dashboard.
 - [API client](api-client.md): where the dashboard's own calls go.
 - [Indexes and search](indexes-and-search.md): the indexes Backray creates, and whole-word search.
 - [Logging](logging.md): where the server's messages go.

@@ -19,8 +19,12 @@ This guide walks you through it, from getting the packages to a running dashboar
 | --- | --- |
 | The dashboard at the path you choose (for example `/admin`), in English and Arabic, light and dark | Login. The dashboard is open to anyone who can reach it |
 | List, Show, Create and Edit pages for every resource Backray found in your models, with search, sorting, filters and paging | File uploads. A file field keeps the file inside the record for now |
-| Nested objects and lists up to 3 levels, trees (a subdocument array that holds itself) up to 10 levels, and models that reference themselves | Extensions: your own pages, sections and field types in the dashboard |
-| A Health page, sidebar markers and a banner when a model can't be mapped | Publishing to npm. You install the packages from files you build (step 1) |
+| Nested objects and lists up to 6 levels (or your own `maxNesting`), lists of lists, maps of references, trees (a subdocument array that holds itself) up to 10 levels, and models that reference themselves | Publishing to npm. You install the packages from files you build (step 1) |
+| String and number ids typed in on Create, and references to them | `@backray/sdk` outside the Backray repository: extensions build, but their types and field-type config parsers need the SDK ([Extensions](features/extensions.md)) |
+| Filters on fields inside objects and object lists, and on references whose model comes from another field | A dashboard page in server mode: the start page says "Coming soon" and holds the extensions' widgets |
+| Sidebar groups, with discriminators grouped under their base model | |
+| [Extensions](features/extensions.md): widgets, page and section replacements and field types, built with `host-extensions` and loaded at runtime | |
+| A Health page, sidebar markers and a banner when a model can't be mapped | |
 | [The JSON API](features/json-api.md) the dashboard calls, under `/admin/api` | Data sources other than Mongoose |
 
 ## Where to start

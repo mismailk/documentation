@@ -31,4 +31,4 @@ models: {
 
 Two nodes with the same `_id` in one save are refused ("Two nodes share the same id"). The array that holds the child nodes can't be named `id`, `_id`, `__proto__`, `constructor` or `prototype`, and a tree takes no `summary`.
 
-Recursion of any other shape, such as a single subdocument that holds itself, is served as `json` with a warning on the Health page. Ordinary nesting (objects and arrays of subdocuments that aren't trees) goes 3 levels deep; a tree's own levels don't count toward that.
+Recursion of any other shape, such as a single subdocument that holds itself, is served as `json` with a warning on the Health page. Ordinary nesting (objects and arrays of subdocuments that aren't trees) goes six levels deep by default, and `backray({ maxNesting })` changes that; a tree's own levels don't count toward it.
