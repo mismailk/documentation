@@ -13,6 +13,14 @@ npm install ~/backray-packs/backray-utils-0.1.0.tgz ~/backray-packs/backray-app-
 
 npm adds them to your `package.json` as `file:` dependencies, so a teammate who runs `npm install` gets them too, as long as the files are at the same path on their machine.
 
+If you build extensions, also install the SDK and the kit as dev dependencies:
+
+```bash
+npm install -D ~/backray-packs/backray-sdk-0.1.0.tgz ~/backray-packs/backray-ui-0.1.0.tgz
+```
+
+The SDK holds the extension contract's types and hooks; the kit's source holds the component types. [Extensions](../features/extensions.md) shows the rest of an extension project's setup.
+
 ## Why one command
 
 The packages depend on each other. When you install them together, npm uses the files you gave it. Installing `backray-express` on its own makes npm look for `@backray/server` on the public npm registry, where it doesn't exist, and the install fails with `npm error 404`. Installing the files one at a time in the order above also works.

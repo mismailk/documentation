@@ -47,7 +47,31 @@ An extension compiles against `@backray/sdk`, which holds the types, the hooks a
 
 The host's shared API is version `1.0.0`.
 
-> **Getting `@backray/sdk`:** the SDK isn't packed with the five files from [step 1](../getting-started/1-get-the-packages.md) yet. A widget or page builds without it, because the bundler maps every `@backray/sdk` import to the dashboard's own copy. Its TypeScript types, `@backray/sdk/testing` and `@backray/sdk/field-config` (which the bundle includes) need the package itself; for now they work in an extension built inside the Backray repository, like the example project's.
+## Installing the SDK
+
+Install `backray-sdk` and `backray-ui` as dev dependencies, with React, its types and TypeScript:
+
+```bash
+npm install -D ~/backray-packs/backray-sdk-0.1.0.tgz ~/backray-packs/backray-ui-0.1.0.tgz react @types/react typescript
+```
+
+The SDK holds the types, the hooks and `defineFieldConfig`; the kit's source gives your components their types. At runtime the bundle reads both from the dashboard's own copy; only `@backray/sdk/field-config`, a small parser helper, is bundled into a field-type extension.
+
+Their types are read from the packages' source, so `tsconfig.json` uses these settings:
+
+```json
+{
+  "compilerOptions": {
+    "strict": true,
+    "jsx": "react-jsx",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "skipLibCheck": true,
+    "noEmit": true
+  },
+  "include": ["extensions", "extensions.config.ts"]
+}
+```
 
 ## The config file
 

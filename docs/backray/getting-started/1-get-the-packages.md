@@ -5,7 +5,7 @@ order: 1
 
 # Step 1: Get the packages
 
-The Backray packages aren't on npm yet. You build them once from the Backray repository. The result is five `.tgz` files that you install in your project in step 2.
+The Backray packages aren't on npm yet. You build them once from the Backray repository. The result is seven `.tgz` files: five you install in your project in step 2, and two more if you build extensions.
 
 ## 1. Build and pack
 
@@ -16,7 +16,7 @@ npm install
 npm run pack:local -- ~/backray-packs
 ```
 
-`pack:local` builds every package, including the dashboard itself, and writes five files to the folder you give it:
+`pack:local` builds every package, including the dashboard itself, and writes seven files to the folder you give it:
 
 | File | What it is |
 | --- | --- |
@@ -25,10 +25,12 @@ npm run pack:local -- ~/backray-packs
 | `backray-server-0.1.0.tgz` | The server core, which works with any framework |
 | `backray-express-0.1.0.tgz` | The Express middleware you add to your app |
 | `backray-adapters-mongoose-0.1.0.tgz` | Reads your Mongoose models |
+| `backray-sdk-0.1.0.tgz` | The extension contract: types, hooks, test host and `defineFieldConfig`; only for projects that build extensions |
+| `backray-ui-0.1.0.tgz` | The UI kit's source, for extensions' types; only for projects that build extensions |
 
 Without a folder, the files go to `packs/` inside the repository.
 
-At the end it prints a ready-to-copy `npm install` line with the full paths. You use it in step 2.
+At the end it prints ready-to-copy `npm install` lines with the full paths. You use them in step 2.
 
 > **Note:** `pack:local` deletes any old `backray-*.tgz` files in that folder before writing new ones. Use a folder that holds only Backray files.
 
@@ -40,7 +42,7 @@ To check that the files work before you touch your project:
 npm run smoke:pack
 ```
 
-It installs the five files into a new, empty Express project under Node.js 20.19. It then starts that project twice, once as an ES module and once as CommonJS, and checks that the API, the dashboard page and its scripts answer. Then it builds a small extension with the installed `host-extensions` command and checks the bundle, stylesheet and manifest it writes. It ends with `smoke:pack ok (esm, cjs, host-extensions)`. It needs internet access to download Express, Mongoose and Node.js 20.19.
+It installs the five runtime files into a new, empty Express project under Node.js 20.19. It then starts that project twice, once as an ES module and once as CommonJS, and checks that the API, the dashboard page and its scripts answer. Then it builds a small extension with the installed `host-extensions` command and checks the bundle, stylesheet and manifest it writes. In a second project, it installs the SDK and the kit with React and TypeScript, type-checks a widget and a field type with `tsc`, checks that `tsc` refuses a deliberate type error, and builds both extensions with `host-extensions`. It ends with `smoke:pack ok (esm, cjs, host-extensions, extension author)`. It needs internet access to download Express, Mongoose, Node.js 20.19, React, TypeScript and the two new files' dependencies.
 
 To check a project shaped like a CommonJS TypeScript app, run:
 

@@ -8,6 +8,7 @@ order: 90
 | What you see | Why | What to do |
 | --- | --- | --- |
 | `npm error 404 Not Found … @backray/server` while installing | You installed one Backray file on its own, so npm looked for the other packages on the public registry | Install all five files in one command ([step 2](getting-started/2-install.md)) |
+| `Cannot find module '@backray/sdk'` or `'@backray/ui'` in an extension | The SDK and the UI kit are dev dependencies for extension authors, and aren't installed | Install the two dev tarballs ([step 2](getting-started/2-install.md)) |
 | `npm warn EBADENGINE` or `Unsupported engine` | Your project runs a Node.js older than 20.19 | Upgrade Node.js to 20.19 or newer |
 | The page says "backray: the dashboard client is not built" | The `backray-app` file doesn't contain the built dashboard, usually because it was packed by hand or by an older Backray | Build the files again with `npm run pack:local` and reinstall them |
 | The dashboard says "no models are registered" | `backray(...)` ran before your models were registered | Import or require your models before the `app.use(backray(…))` line ([step 3](getting-started/3-add-the-dashboard.md)) |
