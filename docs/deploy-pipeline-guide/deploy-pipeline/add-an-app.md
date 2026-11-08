@@ -19,7 +19,7 @@ Each environment of the app gets its own conf file on the server
 | `CONTAINER` | container name on the server | `<app>-staging` / `<app>-production` |
 | `PORT` | port the app listens on | must equal `PORT` in that environment's `.env`, and must be unique on the server. If the app replaces a process that already runs behind Nginx, use that process's port so Nginx stays unchanged |
 | `ENV_FILE` | absolute path to the app's `.env` on the server | e.g. `/srv/<app>/staging/.env` |
-| `MEMORY` | container memory cap | about 2× the app's normal memory use, e.g. `384m` |
+| `MEMORY` | container memory cap | about 2× the app's normal memory use, e.g. `384m`; for Express it covers pm2 plus every worker, so re-check it after the first deploy |
 | `KEEP_IMAGES` | old images kept on the server for rollback | `3`–`5`, depending on disk space |
 
 `<app>` must be the same name as the app name in the app's workflow.

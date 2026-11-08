@@ -18,7 +18,8 @@ touches the server yet.
 | `{{PRODUCTION_BRANCH}}` | branch for production | any branch name, e.g. `main` or `master`; must differ from the staging branch |
 | `{{NODE_VERSION}}` | Node version for the image | `engines.node`, e.g. `22.12.0` |
 | `{{BUILD_COMMAND}}` | compile step | `npm run build` |
-| `{{START_COMMAND}}` | container command, JSON array form | `["node", "dist/server.js"]` |
+| `{{START_SCRIPT}}` | entry file, relative to `/app`, run by pm2 | `dist/server.js`; pm2 cluster mode needs a script, so `npm start` is not supported |
+| `{{INSTANCES}}` | pm2 cluster workers in the one container | start at `1`; before raising it, read [Running more than one worker](./app-readiness#multiple-workers) |
 | `{{RUNTIME_COPY_LINES}}` | extra runtime paths ([checklist](./app-readiness) item 7) | one line per path, see below |
 | `{{EXTRA_IGNORES}}` | extra paths to keep out of the build | large or irrelevant top-level folders, one per line |
 :::
@@ -31,6 +32,13 @@ The two branch names must differ, must not contain `'`, `,`, `{` or `}`, and
 must not start with `!`. Those characters break the rendered YAML, and a
 leading `!` turns the trigger into a negation pattern. The workflow's tag step
 fails if both branches are the same.
+:::
+
+::: v-pre
+**Existing apps.** Re-copy the `Dockerfile` template and refill it: the
+container now runs `pm2-runtime start dist/server.js -i 1`, pm2 is installed in
+the runtime stage, and `{{INSTANCES}}` starts at `1`. Rebuild the image, and
+re-check `MEMORY` after the first deploy.
 :::
 
 ::: v-pre

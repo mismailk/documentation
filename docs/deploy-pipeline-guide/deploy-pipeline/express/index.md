@@ -51,7 +51,7 @@ start the next step until every checkpoint item passes.
 | Step | What you do | Where | Done when (checkpoint) |
 |---|---|---|---|
 | 1. [How It Works](../how-it-works) (shared) | Read how a push becomes a running container | — | You can say which branch deploys where, and what turns a deploy red |
-| 2. [Is Your App Ready?](./app-readiness) | Check the app against 12 requirements | app repo | `npm ci && npm run build` passes clean; start command, port and runtime files are known |
+| 2. [Is Your App Ready?](./app-readiness) | Check the app against 12 requirements | app repo | `npm ci && npm run build` passes clean; entry file, port and runtime files are known |
 | 3. [Prepare Your App](./prepare-your-app) | Fill the templates, test the image, list the server values | app repo + laptop | The image boots locally with a test `.env` and answers HTTP |
 | 4. [Server Setup](../server-setup) (shared) | Install Docker, the `deployer` user and `/opt/deploy`; log in to GHCR; pin the host key | server | `deploy.sh hello` → exit 2 |
 | 5. [Add the App to the Server](../add-an-app) (shared) | Whitelist the app, create conf + `.env` (contents from [step 3](./prepare-your-app#server-env)), add CI keys, set up GitHub | server + GitHub | The conf check exits 1 with `pull failed`; GitHub environments are ready with deploys off |
@@ -89,6 +89,6 @@ The angle-bracket placeholders (`<app>`, `<org>/<repo>`, `<server-host>`,
 [placeholder table](../#placeholders).
 
 ::: v-pre
-Template placeholders such as `{{IMAGE}}` and `{{START_COMMAND}}` are
+Template placeholders such as `{{IMAGE}}` and `{{START_SCRIPT}}` are
 explained in [Pick your values](./prepare-your-app#pick-your-values).
 :::
