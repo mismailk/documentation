@@ -21,7 +21,7 @@ import { withBase } from 'vitepress'
 | server `/opt/deploy/locks/<app>-<env>.lock` | one deploy at a time per app and environment |
 | server `/opt/deploy/logs/deploy.log` | one line per deploy attempt |
 | server `/home/deployer/.ssh/authorized_keys` | one line per CI key, pinned to its environment |
-| server `ENV_FILE` from the conf | the app's server values, mounted at `/app/.env` (uid `1000`, `600`) |
+| server `ENV_FILE` from the conf | the app's server values, mounted at `/app/.env` (owned by the image's uid — `1000` for Node/Next.js, `101` for React — mode `600`) |
 | app repo `Dockerfile`, `.dockerignore`, `.github/workflows/deploy.yml` | the app's pipeline files, from its app guide's kit |
 | GitHub environments `staging`, `production` | `DEPLOY_HOST`, `DEPLOY_SSH_PORT`, `DEPLOY_KNOWN_HOSTS`, `DEPLOY_ENABLED` variables; `DEPLOY_SSH_KEY` secret |
 

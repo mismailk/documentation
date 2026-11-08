@@ -68,6 +68,7 @@ different for your kind of app.
 |---|---|
 | Express (Node.js API) | [Express Deploy Pipeline](./express/) |
 | Next.js (Node server) | [Next.js Deploy Pipeline](./nextjs/) |
+| React (static SPA) | [React Deploy Pipeline](./react/) |
 
 ## Download the kit {#download-the-kit}
 
