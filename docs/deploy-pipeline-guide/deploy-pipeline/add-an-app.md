@@ -190,12 +190,13 @@ sudo grep -oE '^[[:space:]]*[A-Za-z_][A-Za-z0-9_]*[[:space:]]*=' /srv/<app>/stag
 
 ### Owner, mode and access {#env-access}
 
-- **Owner and mode:** owned by uid `1000` (the container's `node` user),
-  mode `600`.
+- **Owner and mode:** owned by the uid the image runs as, mode `600`:
+  `1000` for the Node and Next.js images (the `node` user), `101` for the
+  React image (the unprivileged nginx user). The app guide says which.
 
   ::: step level=ask where=server
   ```bash
-  sudo chown 1000 /srv/<app>/staging/.env && sudo chmod 600 /srv/<app>/staging/.env
+  sudo chown <image-uid> /srv/<app>/staging/.env && sudo chmod 600 /srv/<app>/staging/.env
   ```
   :::
 
