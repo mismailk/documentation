@@ -37,6 +37,7 @@ express-deploy-kit/
     Dockerfile
     dockerignore
     deploy.yml
+    migrate.yml
 ```
 
 The server files are in the
@@ -65,6 +66,7 @@ Step 5 is needed for every app, including its own CI keys.
 After go-live:
 
 - [Everyday Use](../everyday-use) (shared): deploy, rollback, logs, deploy history.
+- [Database Migrations](./database-migrations): run data changes from a release, before and after the swap.
 - [Troubleshooting](./troubleshooting): Express app problems. For `deploy.sh` exit codes, see the shared [Troubleshooting](../troubleshooting).
 - [Reference](../reference) (shared): files, the exact `docker run`, exit codes, known limitations.
 
