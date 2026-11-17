@@ -43,6 +43,11 @@ express-deploy-kit/
 The server files are in the
 [Deploy Pipeline kit](../#download-the-kit) (steps 4 and 5).
 
+::: tip Already deployed?
+If the app already runs on this pipeline, skip the steps below and go to
+[Updating a Deployed App](./updating).
+:::
+
 ## Steps {#steps}
 
 Work through the steps in order. Each step ends with a **✅ Checkpoint**:
@@ -65,6 +70,7 @@ Step 5 is needed for every app, including its own CI keys.
 
 After go-live:
 
+- [Updating a Deployed App](./updating): what to change when the pipeline gets a new feature.
 - [Everyday Use](../everyday-use) (shared): deploy, rollback, logs, deploy history.
 - [Database Migrations](./database-migrations): run data changes from a release, before and after the swap.
 - [Troubleshooting](./troubleshooting): Express app problems. For `deploy.sh` exit codes, see the shared [Troubleshooting](../troubleshooting).
