@@ -38,7 +38,8 @@ fails if both branches are the same.
 **Existing apps.** Re-copy the `Dockerfile` template and refill it: the
 container now runs `pm2-runtime start dist/server.js -i 1`, pm2 is installed in
 the runtime stage, and `{{INSTANCES}}` starts at `1`. Rebuild the image, and
-re-check `MEMORY` after the first deploy.
+re-check `MEMORY` after the first deploy. See
+[Updating a Deployed App](./updating#cluster-mode) for the full check and steps.
 :::
 
 ::: v-pre
