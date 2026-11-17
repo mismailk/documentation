@@ -22,6 +22,12 @@ problems specific to an Express app. Most show as exit **1**,
 | no HTTP answer, the logs show the app listening on another port or the default | the app doesn't read `PORT` from the `.env`, or binds only to a host other than all interfaces | `app.listen(process.env.PORT)` with no host ([checklist](./app-readiness) item 1) |
 | a native module fails to load (`Error loading shared library`, `invalid ELF header`) | the dependency doesn't build or load on Alpine | change both `FROM` lines to `node:<version>-bookworm-slim` ([Fill the templates](./prepare-your-app#fill-templates)) |
 | staging behaves like production | the app tells environments apart by `NODE_ENV`, which is `production` in every image | use another variable such as `APP_ENV` ([checklist](./app-readiness) item 11) |
+| `invalid script name` or `invalid argument` | the script name or an argument does not fit the server's rules (a dot, a slash, a space, too many arguments) | fix the name or `MIGRATION_ARGS` ([What your scripts must do](./database-migrations#script-rules)) |
+| `Cannot find module '/app/dist/scripts/…'` | the script isn't in the image: `npm run build` didn't compile it, or it isn't under `src/scripts/` | compile it to `dist/scripts/<name>.js` ([What your scripts must do](./database-migrations#script-rules)) |
+| `migration container <container>-migrate already exists: check docker logs <container>-migrate, then docker rm <container>-migrate` | a killed run or a reboot left the one-off container behind, so the next run refuses to start | read its logs, then remove it ([If a run is cancelled](./database-migrations#cancelled-run)) |
+| `RUN_MIGRATION is true but MIGRATION_SCRIPT is empty` | `RUN_MIGRATION` is on but no "before" script is set, so the job fails before deploying | set `MIGRATION_SCRIPT` or turn `RUN_MIGRATION` off ([The variables](./database-migrations#variables)) |
+| the deploy job is red after `Migrate (after)` | an after script failed after the new version went live; the scripts after it did not run | fix the cause, then rerun that script ([If the after step fails](./database-migrations#after-step-failed)) |
+| `timed out after 600s waiting for` the lock, exit 4 | a migration or deploy of the same app and environment is still running | wait, then retry; a cancelled CI run keeps migrating on the server ([If a run is cancelled](./database-migrations#cancelled-run)) |
 :::
 
 To look inside a failed container, see

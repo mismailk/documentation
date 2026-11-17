@@ -23,7 +23,7 @@ import { withBase } from 'vitepress'
 | server `/home/deployer/.ssh/authorized_keys` | one line per CI key, pinned to its environment |
 | server `ENV_FILE` from the conf | the app's server values, mounted at `/app/.env` (owned by the image's uid — `1000` for Node/Next.js, `101` for React — mode `600`) |
 | app repo `Dockerfile`, `.dockerignore`, `.github/workflows/deploy.yml` | the app's pipeline files, from its app guide's kit |
-| GitHub environments `staging`, `production` | `DEPLOY_HOST`, `DEPLOY_SSH_PORT`, `DEPLOY_KNOWN_HOSTS`, `DEPLOY_ENABLED` variables; `DEPLOY_SSH_KEY` secret |
+| GitHub environments `staging`, `production` | `DEPLOY_HOST`, `DEPLOY_SSH_PORT`, `DEPLOY_KNOWN_HOSTS`, `DEPLOY_ENABLED` variables; `DEPLOY_SSH_KEY` secret. Express migrations add `RUN_MIGRATION`, `MIGRATION_SCRIPT`, `MIGRATION_ARGS` and `POST_MIGRATION_STEPS` ([Database Migrations](./express/database-migrations#variables)) |
 
 ## The conf file {#conf}
 
@@ -80,15 +80,48 @@ The whole deploy, in order:
 8. Append the result to `deploy.log` and print
    `deploy: <app> <env> <tag> ok`.
 
+## What each migration runs {#migrate-run}
+
+`migrate <app> <tag> <script> [arg …]` takes the same app allowlist and tag
+rule as `deploy`. A script name matches `^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$`
+(no dots or slashes), each argument matches
+`^[A-Za-z0-9._,:=+@-]{1,200}$`, and there are at most 20 arguments.
+
+It takes the same per-app, per-environment lock, pulls the image, then
+runs the script in a one-off container with the app's configuration:
+
+```bash
+docker run -d --name <CONTAINER>-migrate \
+  --init \
+  --network host \
+  --memory <MEMORY> --memory-swap <MEMORY> \
+  --log-opt max-size=10m --log-opt max-file=3 \
+  -v <ENV_FILE>:/app/.env:ro \
+  --label deploy.app=<app> \
+  --label deploy.env=<env> \
+  --label deploy.tag=<tag> \
+  --label deploy.role=migrate \
+  <IMAGE>:<tag> \
+  node dist/scripts/<script>.js <args>
+```
+
+It follows the container's output to the SSH session, waits for its exit
+code and removes the container. A dropped SSH session does not stop it: the
+script runs to the end and keeps the lock, so a deploy meanwhile waits.
+There is no `--rm`, so a hard failure leaves `<CONTAINER>-migrate` behind;
+the next run refuses to start and names the `docker rm` to run after
+checking its logs. The outcome goes to `deploy.log` as
+`result=migrate:<script>:ok` or `result=migrate:<script>:fail:<step>`.
+
 ## `deploy.sh` exit codes {#exit-codes}
 
 | Code | Meaning | Messages |
 |---|---|---|
-| `0` | deployed and verified | `deploy: <app> <env> <tag> ok` |
-| `1` | pull, run or verify failed | `pull failed`, `run failed`, `verify failed`, `cannot open lock` |
-| `2` | invalid request or conf | `expected: deploy <app> <tag>`, `unknown command`, `unknown app`, `invalid tag`, `... but --env pins ...`, `forced command must pin --env ...`, `unexpected arguments after --env`, `--env needs a value`, `invalid --env ...`, `conf: ...` |
+| `0` | deployed and verified | `deploy: <app> <env> <tag> ok`, `migrate: <app> <env> <tag> <script> ok` |
+| `1` | pull, run or verify failed | `pull failed`, `run failed`, `verify failed`, `cannot open lock`, `migrate: <script> exited <n>`, `migration container <name> already exists: check docker logs <name>, then docker rm <name>` |
+| `2` | invalid request or conf | `expected: deploy <app> <tag>`, `unknown command`, `unknown app`, `invalid tag`, `... but --env pins ...`, `forced command must pin --env ...`, `unexpected arguments after --env`, `--env needs a value`, `invalid --env ...`, `invalid script name`, `invalid argument`, `too many arguments`, `conf: ...` |
 | `3` | no conf for this app and environment | `conf not found`, `conf not readable` |
-| `4` | lock timeout (another deploy is running) | `timed out after 600s waiting for ...` |
+| `4` | lock timeout (another deploy or migration is running) | `timed out after 600s waiting for ...` |
 
 ## Known limitations {#known-limitations}
 
@@ -96,7 +129,7 @@ The whole deploy, in order:
 - The verify step only checks that `/` answers HTTP; it doesn't check pages or the services the app calls.
 - No automatic rollback: a failed verify leaves the failed container in place.
 - `NODE_ENV` is `production` in every environment.
-- Migrations and other data changes are run by hand.
+- Migrations run only when RUN_MIGRATION is on, and there is no "down" step: a migration can't be rolled back by the pipeline.
 - Staging and production images share one GHCR package, and tags can be pushed again (a "Re-run all jobs" rebuilds under the same tag).
 - The server's GHCR access depends on one personal token with an expiry date.
 

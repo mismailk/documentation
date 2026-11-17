@@ -67,6 +67,10 @@ the workflow are GitHub syntax, not placeholders, so leave them as they are.
 | `Dockerfile` | `Dockerfile` |
 | `dockerignore` | `.dockerignore` |
 | `deploy.yml` | `.github/workflows/deploy.yml` |
+| `migrate.yml` | `.github/workflows/migrate.yml` |
+
+`migrate.yml` is optional: copy it only if the app uses
+[database migrations](./database-migrations).
 
 Two template defaults to review:
 

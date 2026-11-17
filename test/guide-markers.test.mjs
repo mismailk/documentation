@@ -29,6 +29,23 @@ export const REFERENCE_BLOCKS = [
       '  <IMAGE>:<tag>',
     ].join('\n'),
   },
+  {
+    file: 'reference.md',
+    code: [
+      'docker run -d --name <CONTAINER>-migrate \\',
+      '  --init \\',
+      '  --network host \\',
+      '  --memory <MEMORY> --memory-swap <MEMORY> \\',
+      '  --log-opt max-size=10m --log-opt max-file=3 \\',
+      '  -v <ENV_FILE>:/app/.env:ro \\',
+      '  --label deploy.app=<app> \\',
+      '  --label deploy.env=<env> \\',
+      '  --label deploy.tag=<tag> \\',
+      '  --label deploy.role=migrate \\',
+      '  <IMAGE>:<tag> \\',
+      '  node dist/scripts/<script>.js <args>',
+    ].join('\n'),
+  },
 ]
 
 const pages = (dir, base = '') => fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) =>
