@@ -26,6 +26,11 @@ repo.
 | 12 | The app fits in its memory cap (the default is `384m`) | `deploy.sh` runs the container with that limit and no extra swap; above it, the app is killed | `docker stats` during [the local test](./prepare-your-app#test-image-locally); a mid-size app idles around 115 MiB |
 | 13 | The app doesn't rely on `NODE_ENV` to tell staging from production | the image sets `NODE_ENV=production` for **every** environment, and the server's `.env` can't override it; use another variable such as `APP_ENV` | `grep -rn NODE_ENV --exclude-dir=node_modules --exclude-dir=.next .` |
 | 14 | The app doesn't log secrets while it boots | a failed deploy prints the last 50 log lines into the GitHub Actions log | read your startup logging |
+| 15 | The standalone server finishes open requests when it gets `SIGTERM` (checked with Next.js 16.2.10), unless `NEXT_MANUAL_SIG_HANDLE` is set | a zero-downtime deploy stops the old container while it still receives traffic, and the container gets 10 s to finish. With `NEXT_MANUAL_SIG_HANDLE`, the app must handle the signal itself | `npm ls next` and `grep -rn NEXT_MANUAL_SIG_HANDLE . --exclude-dir=node_modules --exclude-dir=.next` |
+
+On a Next.js older than 16.2.10, test it with the `docker stop` check in
+[Updating a Deployed App](./updating#zero-downtime) before switching
+zero-downtime deploys on.
 
 ::: warning Undeclared dependencies
 Item 11 has a known trap: an app can import a package that is only installed

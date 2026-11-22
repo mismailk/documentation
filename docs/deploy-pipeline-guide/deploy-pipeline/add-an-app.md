@@ -11,13 +11,15 @@ on your laptop, from the unzipped `deploy-pipeline-kit/` folder.
 ## 3.1 Pick the server values {#pick-your-values}
 
 Each environment of the app gets its own conf file on the server
-(`/opt/deploy/apps/<app>-<env>.conf`) with these six values:
+(`/opt/deploy/apps/<app>-<env>.conf`) with these six values, plus an optional
+seventh for zero-downtime deploys:
 
 | Conf key | What it is | How to choose it |
 |---|---|---|
 | `IMAGE` | image repository, no tag | `ghcr.io/<org>/<repo>`, **lowercase**; the same value as the workflow's image |
 | `CONTAINER` | container name on the server | `<app>-staging` / `<app>-production` |
 | `PORT` | port the app listens on | must equal `PORT` in that environment's `.env`, and must be unique on the server. If the app replaces a process that already runs behind Nginx, use that process's port so Nginx stays unchanged |
+| `BACKUP_PORT` (optional) | second port used while a zero-downtime deploy switches versions | 1–65535, different from `PORT`, unique on the server, and nothing may listen on it. Leave it out for a deploy with a gap. See [8. Zero-Downtime Deploys](./zero-downtime) |
 | `ENV_FILE` | absolute path to the app's `.env` on the server | e.g. `/srv/<app>/staging/.env` |
 | `MEMORY` | container memory cap | about 2× the app's normal memory use, e.g. `384m`; for Express it covers pm2 plus every worker, so re-check it after the first deploy |
 | `KEEP_IMAGES` | old images kept on the server for rollback | `3`–`5`, depending on disk space |
@@ -124,8 +126,9 @@ MEMORY=384m
 KEEP_IMAGES=5
 ```
 
-Rules: `KEY=value` with no spaces and no quotes; all six keys exactly once;
-owned by root, mode `644`:
+Rules: `KEY=value` with no spaces and no quotes; the six keys from
+[3.1](#pick-your-values) exactly once, and `BACKUP_PORT` at most once if you
+use it; owned by root, mode `644`:
 
 ::: step level=ask where=server
 ```bash
@@ -233,6 +236,8 @@ sudo -u deployer /opt/deploy/deploy.sh deploy <app> staging-0000000; echo "exit 
 
 Then add an Nginx `proxy_pass http://127.0.0.1:<PORT>;` site for the app,
 if it doesn't have one yet. Nginx never needs to change on later deploys.
+For deploys without a gap, see
+[8. Zero-Downtime Deploys](./zero-downtime).
 
 ## 3.6 CI keys for this app {#ci-keys}
 

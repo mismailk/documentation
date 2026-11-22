@@ -88,8 +88,10 @@ Server values live only in the `.env` at the conf's `ENV_FILE`. The app
 reads it when the container starts.
 
 1. Edit the file on the server. Keep it owned by uid `1000`, mode `600`.
-   If you change `PORT`, change the conf's `PORT` and the Nginx
-   `proxy_pass` to match.
+   If you change `PORT`, change the conf's `PORT` and Nginx to match. For an
+   app with `BACKUP_PORT`, the port is in the Nginx `upstream` block, not in
+   `proxy_pass`: change its `server 127.0.0.1:<PORT>` line
+   ([8.3](./zero-downtime#nginx)).
 2. Redeploy the tag that is running. Find it, then deploy it again:
 
    ::: step level=ask where=server
@@ -119,9 +121,11 @@ This replaces the container and runs the same checks as any deploy.
   2026-11-06T11:02:47Z app=orders-api env=staging tag=staging-5d6e7f8 result=fail:verify
   ```
 
-  `result` is `ok`, or `fail:` followed by the step that failed (`lock`,
-  `pull`, `run`, `verify`). Requests rejected earlier (exit 2 and 3) aren't
-  logged there; CI shows them.
+  `result` is `ok`, or `fail:` followed by the step that failed: `lock`,
+  `pull`, `run` or `verify`. Zero-downtime deploys add `backup-port`,
+  `backup`, `stop-old` and `main`, logged as `fail:backup-port` …
+  `fail:main`. Requests rejected earlier (exit 2 and 3) aren't logged there;
+  CI shows them.
 
 ## Images on the server {#images}
 

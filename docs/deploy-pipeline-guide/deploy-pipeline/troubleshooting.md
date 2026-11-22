@@ -34,9 +34,16 @@ app are in your app's guide.
 | exit **1**, `verify failed`, the logs name `/app/.env` and permission | the container's `node` user (uid 1000) can't read the `.env` | `sudo chown 1000 <ENV_FILE> && sudo chmod 600 <ENV_FILE>` |
 | exit **1**, `verify failed` after `container state '...', expected 'true 0'`, and `docker inspect` shows `oom=true` ([below](#inspect)) | the app went over its memory cap | raise `MEMORY` in the conf (and check `docker stats` for a leak) |
 | exit **1**, `verify failed`, other errors in the 50 log lines | the app crashed while starting | fix the app (your app's guide lists the usual causes); the next push deploys it |
+| exit **1**, `backup-port failed` (`result=fail:backup-port`), `port ... already answers; another process uses BACKUP_PORT` | another process listens on the conf's `BACKUP_PORT` | pick a free port ([8.2](./zero-downtime#backup-port)), update the conf, deploy again |
+| exit **1**, `backup failed` (`result=fail:backup`) | the new version failed on the backup port. The backup was removed and the old container kept serving | read the 50 log lines above; fix the app or roll back. Users were not affected |
+| exit **1**, `stop-old failed` (`result=fail:stop-old`) | the old main container could not be stopped or removed, after the backup was checked | check `docker ps -a`, remove the old container if it is stuck, then deploy again |
+| exit **1**, `main failed` (`result=fail:main`), `... still serves ...` | the new version failed on the main port. The failed main is stopped but kept, and the backup keeps serving that tag | read `docker logs <CONTAINER>`, then deploy a fixed or older tag. That recovery has no gap ([What a deploy does now](./zero-downtime#order)) |
 | exit **4**, `timed out after 600s waiting for ...` | another deploy of the same app and environment is still running | wait, or look for a hung `deploy.sh` with `ps aux` |
 | the app calls the wrong service, often `http://localhost:3000` | a URL is missing from the `.env` and the code falls back to a default; under host networking that reaches whatever listens on that port on the server | add the value and run the key check ([3.4](./add-an-app#check-keys)) |
 | disk full | too many images or build leftovers | lower `KEEP_IMAGES`, and check `docker system df` |
+| warning `removing stale <CONTAINER>-backup` | an earlier deploy left a backup container behind, and the main container is healthy | none; the deploy removes the backup and continues |
+| `<CONTAINER>-backup is serving; replacing the main container behind it` | an earlier deploy failed at `main`; the backup is what serves | none; the deploy replaces the main behind it. Nginx stays on the backup until the new main answers |
+| warning `neither <CONTAINER> nor <CONTAINER>-backup is serving; starting fresh` | an earlier deploy left both containers down | none; nothing was serving, and the deploy starts the new version first |
 
 ## Inspect a failed container {#inspect}
 

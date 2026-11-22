@@ -46,6 +46,11 @@ react-deploy-kit/
 The server files are in the
 [Deploy Pipeline kit](../#download-the-kit) (steps 4 and 5).
 
+::: tip Already deployed?
+If the app already runs on this pipeline, skip the steps below and go to
+[Updating a Deployed App](./updating).
+:::
+
 ## Steps {#steps}
 
 Work through the steps in order. Each step ends with a **✅ Checkpoint**:
@@ -74,6 +79,7 @@ nginx as uid 101; use the ownership in
 
 Reference pages, for after go-live:
 
+- [Updating a Deployed App](./updating): what to change when the pipeline gets a new feature.
 - [Everyday Use](../everyday-use): deploy, rollback, change a server value, logs, deploy history.
 - [Troubleshooting](./troubleshooting): static React problems (deep links, cache, base path, public values). For `deploy.sh` exit codes, see the shared [Troubleshooting](../troubleshooting).
 - [Reference](../reference): files, the conf, `docker run` and exit codes for every app.
