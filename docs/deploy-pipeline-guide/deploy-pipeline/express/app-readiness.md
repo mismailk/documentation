@@ -20,7 +20,21 @@ the container setup depends on.
 | 9 | Services the app talks to (Mongo, Redis, …) are reachable from the server **host** at the address in `.env` | the container shares the host's network, so `localhost:27017` means the host's Mongo | — |
 | 10 | The app doesn't log secrets while it boots | a failed deploy prints the last 50 log lines into the GitHub Actions log | read your startup logging |
 | 11 | The app doesn't rely on `NODE_ENV` to tell staging from production | the image sets `NODE_ENV=production` for **every** environment, and dotenv won't override it; use another variable such as `APP_ENV` | `grep -rn NODE_ENV src` |
-| 12 | Database changes are backward-compatible (expand/contract) | migrations are **not** run by the pipeline; rollback swaps code only, never the schema | — |
+| 12 | Database changes are backward-compatible (expand/contract) | migrations run only when you switch them on, and a rollback swaps code only, never the schema ([Database Migrations](./database-migrations)) | — |
+| 13 | The app closes its server on `SIGINT` and `SIGTERM` | pm2 sends `SIGINT` to each worker when the container stops, and with `PM2_KILL_TIMEOUT=8000` in the image it waits up to 8 s for open requests. A server left open is killed | `grep -rnE "SIGINT|SIGTERM" src` |
+| 14 | A `PORT` set on `docker run` wins over the `.env` one | a zero-downtime deploy starts the same image on a second port with `-e PORT=<backup-port>`. Plain `dotenv.config()` keeps a real environment variable; `dotenv.config({ override: true })` replaces it with the `.env` value, so the app binds the main port and fails safely | `grep -rn "override" src` |
+
+::: tip Item 13: close the server on a stop signal
+`pm2-runtime` sends `SIGINT` to each worker on `docker stop`. Close the
+listener so open requests finish before pm2 kills it:
+
+```ts
+const server = app.listen(port);
+for (const signal of ["SIGINT", "SIGTERM"]) {
+  process.on(signal, () => server.close(() => process.exit(0)));
+}
+```
+:::
 
 ::: warning Undeclared dependencies
 Item 6 has a known trap: an app can import a package that is only installed

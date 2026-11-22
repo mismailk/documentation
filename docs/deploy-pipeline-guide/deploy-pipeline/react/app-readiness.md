@@ -26,6 +26,7 @@ app repo.
 | 12 | The app doesn't need to keep files on local disk between deploys | the container is replaced on every deploy, so its disk is thrown away | uploads should go to object storage or the API |
 | 13 | A build never logs a secret | a failed deploy prints the last 50 container log lines into the GitHub Actions log, and CI logs are public to repo readers | read the build output |
 | 14 | Every package the code imports is declared in `package.json` | the image installs exactly what the lockfile lists (`npm ci`) | a clean install and build from a fresh clone |
+| 15 | The image's entrypoint takes a `PORT` from `docker run` before the one in the `.env` (the kit's `docker-entrypoint.sh` since 2026-11-21) | a zero-downtime deploy starts the same image on a second port with `-e PORT=<backup-port>`. An older entrypoint reads only `/app/.env`, so it binds the main port and the deploy fails | `grep -n 'PORT from the environment' docker-entrypoint.sh` |
 
 ::: warning Undeclared dependencies
 Item 14 has a known trap: an app can import a package that is only installed

@@ -42,6 +42,11 @@ nextjs-deploy-kit/
 The server files are in the
 [Deploy Pipeline kit](../#download-the-kit) (steps 4 and 5).
 
+::: tip Already deployed?
+If the app already runs on this pipeline, skip the steps below and go to
+[Updating a Deployed App](./updating).
+:::
+
 ## Steps {#steps}
 
 Work through the steps in order. Each step ends with a **✅ Checkpoint**:
@@ -51,7 +56,7 @@ start the next step until every checkpoint item passes.
 | Step | What you do | Where | Done when (checkpoint) |
 |---|---|---|---|
 | 1. [How It Works](../how-it-works), then [Next.js specifics](./how-it-works) | Read how a push becomes a running container, and where public and server values live | — | You can say which branch deploys where, when `NEXT_PUBLIC_*` values are fixed, and what turns a deploy red |
-| 2. [Is Your App Ready?](./app-readiness) | Check the app against 14 requirements | app repo | `npm ci && npm run build` passes clean and produces `.next/standalone/server.js` |
+| 2. [Is Your App Ready?](./app-readiness) | Check the app against 15 requirements | app repo | `npm ci && npm run build` passes clean and produces `.next/standalone/server.js` |
 | 3. [Prepare Your App](./prepare-your-app) | Set `output: "standalone"`, fill the templates, write the public values, test the image, list the server values | app repo + laptop | The image runs locally on the `.env` port with the staging public values baked in |
 | 4. [Server Setup](../server-setup) (shared) | Install Docker, the `deployer` user and `/opt/deploy`; log in to GHCR; pin the host key | server | `deploy.sh hello` → exit 2 |
 | 5. [Add the App to the Server](../add-an-app) (shared) | Whitelist the app, create conf + `.env` (contents from [step 3](./prepare-your-app#server-env)), add CI keys, set up GitHub environments and the public values | server + GitHub | The conf check exits 1 with `pull failed`; GitHub is ready with deploys off |
@@ -64,6 +69,7 @@ Step 5 is needed for every app, including its own CI keys.
 
 Reference pages, for after go-live:
 
+- [Updating a Deployed App](./updating): what to change when the pipeline gets a new feature.
 - [Everyday Use](./everyday-use): change a public value, what a rollback brings back, Next's cache. For deploys, rollbacks, logs and server values, see the shared [Everyday Use](../everyday-use).
 - [Troubleshooting](./troubleshooting): Next.js and public value problems. For `deploy.sh` exit codes, see the shared [Troubleshooting](../troubleshooting).
 - [Reference](./reference): the image, public build value rules, Next.js limitations. For files, the conf, `docker run` and exit codes, see the shared [Reference](../reference).

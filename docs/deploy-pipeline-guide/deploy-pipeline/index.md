@@ -51,7 +51,7 @@ A marker can also use four colons (`:::: step …` closed by `::::`) when it wra
 
 **Pick the path.** Check `package.json` dependencies, in this order: `next` means the [Next.js guide](./nextjs/); `express` means the [Express guide](./express/); `react` with `vite` or `react-scripts`, served as static files, means the [React guide](./react/). If none matches, ask. Follow that guide's step table in order. It sends you to the shared stages linked below.
 
-**Already deployed?** If the repo already has this pipeline's `.github/workflows/deploy.yml`, the app is on the pipeline: don't redo the first-deploy stages (server setup, CI keys, conf, go-live). For an Express app, follow [Updating a Deployed App](./express/updating). For the other app types, compare the repo's files with the guide's templates and ask the developer before changing anything.
+**Already deployed?** If the repo already has this pipeline's `.github/workflows/deploy.yml`, the app is on the pipeline: don't redo the first-deploy stages (server setup, CI keys, conf, go-live). Follow that app type's Updating a Deployed App page: [Express](./express/updating), [Next.js](./nextjs/updating) or [React](./react/updating). For anything those pages don't cover, compare the repo's files with the guide's templates and ask the developer before changing anything.
 
 **Checkpoints.** Each stage ends with a ✅ Checkpoint. Run the checkpoint items you're allowed to run, ask for the rest, and don't start the next stage until every item passes.
 :::
@@ -120,6 +120,7 @@ Reference pages, for after go-live:
 - [5. Everyday Use](./everyday-use): deploy, rollback, change a server value, logs, deploy history.
 - [6. Troubleshooting](./troubleshooting): symptom → cause → fix, by `deploy.sh` exit code.
 - [7. Reference](./reference): files, the conf file, the exact `docker run`, exit codes, known limitations.
+- [8. Zero-Downtime Deploys](./zero-downtime): deploys without a gap, switched on per app.
 
 ## Placeholders used in commands {#placeholders}
 

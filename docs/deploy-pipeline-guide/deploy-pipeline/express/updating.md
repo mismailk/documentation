@@ -13,6 +13,33 @@ Never redo the first-deploy steps for an update: server setup, CI keys, the
 conf and go-live are done once. The pipeline gained a feature; the app keeps
 the setup it already has.
 
+## Zero-downtime deploys (2026-11-21) {#zero-downtime}
+
+**Needed only** if users see errors during deploys and you want to remove
+the gap. Otherwise skip this update.
+
+**Check**, in the app repo:
+
+::: step level=run where=laptop verify="prints present when the image is ready; no output when it needs the update"
+```bash
+grep -q 'PM2_KILL_TIMEOUT' Dockerfile && grep -rqE 'SIGINT|SIGTERM' src && echo present
+```
+:::
+
+`present` means the image is ready. No output means it isn't.
+
+**Update:**
+
+1. Add `ENV PM2_KILL_TIMEOUT=8000` to the `Dockerfile`, after
+   `ENV NODE_ENV=production` (or re-copy the `Dockerfile` template from the
+   new Express kit).
+2. Close the server on `SIGINT` and `SIGTERM`
+   ([Is Your App Ready?](./app-readiness), item 13).
+3. Test the image locally:
+   [Test the image locally before pushing](./prepare-your-app#test-image-locally).
+4. Push to staging.
+5. Then switch it on: [Zero-Downtime Deploys](../zero-downtime).
+
 ## Database migrations (2026-11-17) {#migrations}
 
 **Needed only** when a release has data migrations. An app that never runs
